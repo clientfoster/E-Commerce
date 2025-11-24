@@ -1,52 +1,145 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Filter } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import type { Product, Category, Page } from '../types';
+import { useNavigate } from 'react-router-dom';
+import { Filter, Gift } from 'lucide-react';
+import { productApi, categoryApi } from '../lib/api';
+import { ProductFilter } from '../components/Products/ProductFilter';
+import { ProductSorting } from '../components/Products/ProductSorting';
+import { ProductCard } from '../components/Products/ProductCard';
+import type { Product, Category } from '../types';
 
-interface ShopPageProps {
-  onNavigate: (page: Page, productSlug?: string) => void;
-}
-
-export function ShopPage({ onNavigate }: ShopPageProps) {
+export function ShopPage() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [filters, setFilters] = useState({
+    minPrice: undefined as number | undefined,
+    maxPrice: undefined as number | undefined,
+    sizes: [] as string[],
+    colors: [] as string[],
+    materials: [] as string[],
+  });
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const loaderRef = useRef<HTMLDivElement>(null);
+
+  const loadProducts = useCallback(async (pageNum: number) => {
+    try {
+      const data = await productApi.getProducts({
+        categoryId: selectedCategory || undefined,
+        isActive: true,
+        page: pageNum,
+        limit: 12,
+        // In a real implementation, we would pass the filters and sorting to the API
+        // For now, we'll handle filtering on the client side
+      });
+      
+      if (data && Array.isArray(data.products)) {
+        if (pageNum === 1) {
+          setProducts(data.products as Product[]);
+        } else {
+          setProducts(prev => [...prev, ...(data.products as Product[])]);
+        }
+        setTotalProducts(data.total);
+        setHasMore(data.page < data.pages);
+      }
+    } catch (error) {
+      console.error('Fetch products error:', error);
+    }
+  }, [selectedCategory, filters, sortBy, sortOrder]);
 
   useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setPage(1);
+      
+      try {
+        const [categoriesData] = await Promise.all([
+          categoryApi.getCategories(),
+          loadProducts(1)
+        ]);
+        
+        if (categoriesData) setCategories(categoriesData as Category[]);
+      } catch (error) {
+        console.error('Fetch data error:', error);
+      }
+      
+      setLoading(false);
+    };
+    
     fetchData();
-  }, [selectedCategory]);
+  }, [selectedCategory, loadProducts]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loading && hasMore) {
+          const nextPage = page + 1;
+          setPage(nextPage);
+          loadProducts(nextPage);
+        }
+      },
+      { threshold: 1.0 }
+    );
 
-    const categoriesPromise = supabase.from('categories').select('*');
-
-    let productsQuery = supabase
-      .from('products')
-      .select('*')
-      .eq('is_active', true);
-
-    if (selectedCategory) {
-      productsQuery = productsQuery.eq('category_id', selectedCategory);
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
     }
 
-    const [categoriesResult, productsResult] = await Promise.all([
-      categoriesPromise,
-      productsQuery,
-    ]);
+    return () => {
+      if (loaderRef.current) {
+        observer.unobserve(loaderRef.current);
+      }
+    };
+  }, [loading, hasMore, page, loadProducts]);
 
-    if (categoriesResult.data) setCategories(categoriesResult.data);
-    if (productsResult.data) setProducts(productsResult.data as Product[]);
-
-    setLoading(false);
-  };
-
-  const filteredProducts = products.filter(
-    (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
-  );
+  const filteredProducts = products
+    .filter((p) => {
+      // Price filter
+      if (filters.minPrice !== undefined && p.price < filters.minPrice) return false;
+      if (filters.maxPrice !== undefined && p.price > filters.maxPrice) return false;
+      
+      // Size filter
+      if (filters.sizes.length > 0 && !p.sizes.some(size => filters.sizes.includes(size))) return false;
+      
+      // Color filter
+      if (filters.colors.length > 0 && !p.colors.some(color => filters.colors.includes(color.name))) return false;
+      
+      // Material filter
+      if (filters.materials.length > 0 && !p.materials.some(material => filters.materials.includes(material.name))) return false;
+      
+      // Original price range filter
+      return p.price >= priceRange[0] && p.price <= priceRange[1];
+    })
+    .sort((a, b) => {
+      let result = 0;
+      
+      switch (sortBy) {
+        case 'name':
+          result = a.name.localeCompare(b.name);
+          break;
+        case 'price':
+          result = a.price - b.price;
+          break;
+        case 'createdAt':
+          result = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+        case 'rating':
+          // In a real implementation, we would have rating data
+          result = 0;
+          break;
+        default:
+          result = 0;
+      }
+      
+      return sortOrder === 'desc' ? -result : result;
+    });
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-16">
@@ -161,38 +254,60 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    whileHover={{ y: -8 }}
-                    onClick={() => onNavigate('product', product.slug)}
-                    className="group cursor-pointer bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-shadow"
                   >
-                    <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
-                      <img
-                        src={product.images[0] || 'https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg'}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      {product.model_url && (
-                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium">
-                          3D
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                        {product.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                        {product.description}
-                      </p>
-                      <p className="text-xl font-bold text-gray-900">
-                        ${product.price.toFixed(2)}
-                      </p>
-                    </div>
+                    <ProductCard product={product} />
                   </motion.div>
                 ))}
               </motion.div>
             )}
+            <div ref={loaderRef} className="py-8 flex justify-center">
+              {hasMore && (
+                <div className="flex items-center gap-2 text-gray-600">
+                  <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
+                  <span>Loading more products...</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Gift Cards Section */}
+            <div className="mt-16 pt-8 border-t border-gray-200">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Gift Cards</h2>
+                <p className="text-gray-600 max-w-2xl mx-auto">
+                  Give the gift of choice with an ATELIER gift card. Perfect for any occasion.
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-8 max-w-4xl mx-auto">
+                <div className="flex flex-col md:flex-row items-center gap-8">
+                  <div className="flex-1 text-center md:text-left">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-3">Send a Gift Card</h3>
+                    <p className="text-gray-600 mb-4">
+                      Let your loved ones choose their perfect style with a digital gift card.
+                    </p>
+                    <button
+                      onClick={() => navigate('/gift-card/purchase')}
+                      className="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                    >
+                      Purchase Gift Card
+                    </button>
+                  </div>
+                  <div className="flex-1 flex justify-center">
+                    <div className="bg-white rounded-lg p-6 shadow-lg w-64">
+                      <div className="text-center">
+                        <Gift className="w-12 h-12 text-purple-600 mx-auto mb-3" />
+                        <h4 className="font-semibold text-gray-900 mb-1">ATELIER Gift Card</h4>
+                        <p className="text-sm text-gray-600 mb-3">Digital Card</p>
+                        <div className="bg-gray-100 rounded p-2 text-center">
+                          <p className="text-xs text-gray-500">Amount</p>
+                          <p className="font-semibold text-gray-900">$25 - $500</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

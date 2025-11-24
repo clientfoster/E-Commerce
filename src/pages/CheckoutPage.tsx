@@ -1,20 +1,38 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { CreditCard, Lock } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useCartStore } from '../stores/cartStore';
-import { supabase } from '../lib/supabase';
-import type { Page } from '../types';
+import { useDiscountStore } from '../stores/discountStore';
+import { useGiftCardStore } from '../stores/giftcardStore';
+import { orderApi } from '../lib/api';
+import { DiscountForm } from '../components/Checkout/DiscountForm';
+import { GiftCardForm } from '../components/Checkout/GiftCardForm';
 
-interface CheckoutPageProps {
-  onNavigate: (page: Page) => void;
-}
-
-export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
+export function CheckoutPage() {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const { items, getTotalPrice, clearCart } = useCartStore();
+  const { appliedDiscount } = useDiscountStore();
+  const { activeGiftCard } = useGiftCardStore();
   const [loading, setLoading] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [giftCardAmount, setGiftCardAmount] = useState(0);
+
+  const calculateDiscountAmount = () => {
+    if (!appliedDiscount) return 0;
+    
+    const total = getTotalPrice();
+    
+    if (appliedDiscount.discountType === 'percentage') {
+      return (total * appliedDiscount.discountValue) / 100;
+    } else if (appliedDiscount.discountType === 'fixed') {
+      return appliedDiscount.discountValue;
+    }
+    
+    return 0;
+  };
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -37,55 +55,53 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
     setLoading(true);
 
     try {
+      const subtotal = getTotalPrice();
+      const discountAmount = calculateDiscountAmount();
+      const totalAmount = subtotal - discountAmount - giftCardAmount;
+      
       const orderData = {
-        user_id: user.id,
-        status: 'pending',
-        total_amount: getTotalPrice(),
-        shipping_address: {
+        userId: user.id,
+        subtotal,
+        discountAmount,
+        giftCardAmount,
+        totalAmount,
+        shippingAddress: {
           address: formData.address,
           city: formData.city,
           state: formData.state,
           zipCode: formData.zipCode,
           country: formData.country,
         },
-        billing_address: {
+        billingAddress: {
           address: formData.address,
           city: formData.city,
           state: formData.state,
           zipCode: formData.zipCode,
           country: formData.country,
         },
+        items: items.map((item) => ({
+          productId: item.product_id,
+          quantity: item.quantity,
+          size: item.size || undefined,
+          color: item.color || undefined,
+          material: item.material || undefined,
+          priceAtTime: item.product?.price || 0,
+        })),
       };
 
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert(orderData)
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      const orderItems = items.map((item) => ({
-        order_id: order.id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        size: item.size,
-        color: item.color,
-        material: item.material,
-        price_at_time: item.product?.price || 0,
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
+      await orderApi.createOrder(
+        orderData.userId,
+        orderData.totalAmount,
+        orderData.shippingAddress,
+        orderData.billingAddress,
+        orderData.items
+      );
 
       await clearCart(user.id);
       setOrderPlaced(true);
 
       setTimeout(() => {
-        onNavigate('orders');
+        navigate('/orders');
       }, 3000);
     } catch (error) {
       console.error('Order error:', error);
@@ -240,6 +256,33 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                 transition={{ delay: 0.1 }}
                 className="bg-white rounded-lg p-6 shadow-sm"
               >
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  Discount
+                </h2>
+                <DiscountForm />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white rounded-lg p-6 shadow-sm"
+              >
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  Gift Card
+                </h2>
+                <GiftCardForm 
+                  onApply={setGiftCardAmount}
+                  totalAmount={getTotalPrice()}
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white rounded-lg p-6 shadow-sm"
+              >
                 <div className="flex items-center gap-2 mb-4">
                   <CreditCard className="w-5 h-5" />
                   <h2 className="text-xl font-semibold text-gray-900">
@@ -296,7 +339,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                 disabled={loading}
                 className="w-full py-4 bg-gray-900 text-white rounded-full font-semibold hover:bg-gray-800 transition-colors disabled:bg-gray-400"
               >
-                {loading ? 'Processing...' : `Place Order - $${getTotalPrice().toFixed(2)}`}
+                {loading ? 'Processing...' : `Place Order - $${(getTotalPrice() - calculateDiscountAmount() - giftCardAmount).toFixed(2)}`}
               </motion.button>
             </form>
           </div>
@@ -338,13 +381,25 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-medium">${getTotalPrice().toFixed(2)}</span>
                 </div>
+                {appliedDiscount && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Discount ({appliedDiscount.code})</span>
+                    <span className="font-medium text-red-600">-${calculateDiscountAmount().toFixed(2)}</span>
+                  </div>
+                )}
+                {giftCardAmount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Gift Card</span>
+                    <span className="font-medium text-red-600">-${giftCardAmount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping</span>
                   <span className="font-medium">Free</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
                   <span>Total</span>
-                  <span>${getTotalPrice().toFixed(2)}</span>
+                  <span>${(getTotalPrice() - calculateDiscountAmount() - giftCardAmount).toFixed(2)}</span>
                 </div>
               </div>
             </div>

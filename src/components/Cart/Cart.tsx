@@ -1,22 +1,19 @@
 import { X, Plus, Minus, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '../../stores/cartStore';
 import { useUIStore } from '../../stores/uiStore';
 import { useAuthStore } from '../../stores/authStore';
-import type { Page } from '../../types';
 
-interface CartProps {
-  onNavigate: (page: Page) => void;
-}
-
-export function Cart({ onNavigate }: CartProps) {
+export function Cart() {
+  const navigate = useNavigate();
   const { cartOpen, setCartOpen } = useUIStore();
   const { items, updateQuantity, removeItem, getTotalPrice } = useCartStore();
   const { user } = useAuthStore();
 
   const handleCheckout = () => {
     setCartOpen(false);
-    onNavigate('checkout');
+    navigate('/checkout');
   };
 
   return (
@@ -55,7 +52,7 @@ export function Cart({ onNavigate }: CartProps) {
                   <button
                     onClick={() => {
                       setCartOpen(false);
-                      onNavigate('shop');
+                      navigate('/shop');
                     }}
                     className="px-6 py-3 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors"
                   >

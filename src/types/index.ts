@@ -4,7 +4,13 @@ export type Page =
   | 'product'
   | 'checkout'
   | 'orders'
-  | 'admin';
+  | 'admin'
+  | 'admin-setup'
+  | 'about'
+  | 'contact'
+  | 'profile'
+  | 'blog'
+  | 'blog-post';
 
 export interface Product {
   id: string;

@@ -1,49 +1,94 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Star, ShoppingBag } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ChevronLeft, Star, ShoppingBag, Send, Heart } from 'lucide-react';
+import { productApi } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
 import { useCartStore } from '../stores/cartStore';
 import { useUIStore } from '../stores/uiStore';
+import { useWishlistStore } from '../stores/wishlistStore';
+import { useRecentlyViewedStore } from '../stores/recentlyViewedStore';
 import { ProductViewer3D } from '../components/3D/ProductViewer3D';
-import type { Product, Page } from '../types';
+import { RelatedProducts } from '../components/Products/RelatedProducts';
+import { RecentlyViewed } from '../components/Products/RecentlyViewed';
+import type { Product } from '../types';
 
-interface ProductPageProps {
-  productSlug: string;
-  onNavigate: (page: Page) => void;
-}
-
-export function ProductPage({ productSlug, onNavigate }: ProductPageProps) {
+export function ProductPage() {
+  const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<{ name: string; hex: string } | null>(null);
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   const [view, setView] = useState<'3d' | 'images'>('images');
   const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewTitle, setReviewTitle] = useState('');
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewRating, setReviewRating] = useState(5);
+  const [submittingReview, setSubmittingReview] = useState(false);
 
-  const { user } = useAuthStore();
+  const { user, profile } = useAuthStore();
   const { addItem } = useCartStore();
   const { setCartOpen, setAuthModalOpen } = useUIStore();
+  const { isInWishlist, addItem: addWishlistItem, removeItem: removeWishlistItem } = useWishlistStore();
+  const { addProduct: addRecentlyViewed } = useRecentlyViewedStore();
 
   useEffect(() => {
-    fetchProduct();
-  }, [productSlug]);
+    if (slug) {
+      fetchProduct();
+    }
+  }, [slug]);
+
+  useEffect(() => {
+    // Add to recently viewed when product loads
+    if (product) {
+      addRecentlyViewed(product);
+    }
+  }, [product, addRecentlyViewed]);
 
   const fetchProduct = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('products')
-      .select('*')
-      .eq('slug', productSlug)
-      .eq('is_active', true)
-      .maybeSingle();
+    try {
+      const data = await productApi.getProductBySlug(slug!);
 
-    if (data) {
-      const productData = data as Product;
-      setProduct(productData);
-      if (productData.colors.length > 0) setSelectedColor(productData.colors[0]);
-      if (productData.sizes.length > 0) setSelectedSize(productData.sizes[0]);
-      if (productData.materials.length > 0) setSelectedMaterial(productData.materials[0].name);
+      if (data) {
+        const productData = data as Product;
+        setProduct(productData);
+        if (productData.colors.length > 0) setSelectedColor(productData.colors[0]);
+        if (productData.sizes.length > 0) setSelectedSize(productData.sizes[0]);
+        if (productData.materials.length > 0) setSelectedMaterial(productData.materials[0].name);
+        
+        // Set mock reviews for now - in a real app, these would come from the backend
+        setReviews([
+          {
+            id: '1',
+            user: { name: 'Alex Johnson', avatar: null },
+            rating: 5,
+            title: 'Absolutely stunning!',
+            comment: 'This piece exceeded my expectations. The quality and craftsmanship are exceptional.',
+            date: '2024-01-15',
+          },
+          {
+            id: '2',
+            user: { name: 'Sarah Miller', avatar: null },
+            rating: 4,
+            title: 'Great product',
+            comment: 'Beautiful design and comfortable to wear. Will definitely buy again.',
+            date: '2024-01-10',
+          },
+          {
+            id: '3',
+            user: { name: 'Michael Chen', avatar: null },
+            rating: 5,
+            title: 'Perfect gift',
+            comment: 'Bought this as a gift and it was a huge hit. Excellent quality and fast shipping.',
+            date: '2024-01-05',
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error('Fetch product error:', error);
     }
     setLoading(false);
   };
@@ -65,6 +110,54 @@ export function ProductPage({ productSlug, onNavigate }: ProductPageProps) {
     });
 
     setCartOpen(true);
+  };
+
+  const handleToggleWishlist = () => {
+    if (!product) return;
+    
+    if (isInWishlist(product.slug)) {
+      removeWishlistItem(product.slug);
+    } else {
+      addWishlistItem(product.slug);
+    }
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+    
+    if (!product) return;
+    
+    setSubmittingReview(true);
+    
+    try {
+      // In a real app, this would be an API call to submit the review
+      const newReview = {
+        id: Date.now().toString(),
+        user: { name: profile?.fullName || user?.email, avatar: null },
+        rating: reviewRating,
+        title: reviewTitle,
+        comment: reviewComment,
+        date: new Date().toISOString().split('T')[0],
+      };
+      
+      setReviews(prev => [newReview, ...prev]);
+      setReviewTitle('');
+      setReviewComment('');
+      setReviewRating(5);
+      
+      // Show success message
+      alert('Review submitted successfully!');
+    } catch (error) {
+      console.error('Submit review error:', error);
+      alert('Failed to submit review. Please try again.');
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   if (loading) {
@@ -93,7 +186,7 @@ export function ProductPage({ productSlug, onNavigate }: ProductPageProps) {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Product not found</h2>
           <button
-            onClick={() => onNavigate('shop')}
+            onClick={() => navigate('/shop')}
             className="px-6 py-3 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors"
           >
             Back to Shop
@@ -109,7 +202,7 @@ export function ProductPage({ productSlug, onNavigate }: ProductPageProps) {
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          onClick={() => onNavigate('shop')}
+          onClick={() => navigate('/shop')}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -310,6 +403,16 @@ export function ProductPage({ productSlug, onNavigate }: ProductPageProps) {
               Add to Cart
             </motion.button>
 
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleToggleWishlist}
+              className={`w-full py-4 rounded-full font-semibold transition-colors flex items-center justify-center gap-2 border-2 ${isInWishlist(product?.slug || '') ? 'bg-red-50 border-red-500 text-red-600' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+            >
+              <Heart className={`w-5 h-5 ${isInWishlist(product?.slug || '') ? 'fill-current' : ''}`} />
+              {isInWishlist(product?.slug || '') ? 'Remove from Wishlist' : 'Add to Wishlist'}
+            </motion.button>
+
             <div className="border-t border-gray-200 pt-6">
               <h3 className="text-sm font-semibold text-gray-900 mb-3">
                 Product Details
@@ -321,9 +424,161 @@ export function ProductPage({ productSlug, onNavigate }: ProductPageProps) {
                 <li>• 30-day return policy</li>
               </ul>
             </div>
+
+            {/* Reviews Section */}
+            <div className="border-t border-gray-200 pt-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Customer Reviews</h2>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-5 h-5 ${
+                          i < Math.floor(4.5)
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'fill-gray-200 text-gray-200'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm text-gray-600 ml-2">4.5 out of 5</span>
+                </div>
+              </div>
+
+              {/* Review Form */}
+              {user ? (
+                <form onSubmit={handleSubmitReview} className="mb-8 p-6 bg-gray-50 rounded-lg">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Write a Review</h3>
+                  
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setReviewRating(star)}
+                          className="text-2xl focus:outline-none"
+                        >
+                          <Star
+                            className={`w-6 h-6 ${
+                              star <= reviewRating
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'fill-gray-200 text-gray-200'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                    <input
+                      type="text"
+                      value={reviewTitle}
+                      onChange={(e) => setReviewTitle(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      placeholder="Give your review a title"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Review</label>
+                    <textarea
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      rows={4}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      placeholder="Share your thoughts about this product"
+                      required
+                    />
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    disabled={submittingReview}
+                    className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {submittingReview ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Submit Review
+                      </>
+                    )}
+                  </button>
+                </form>
+              ) : (
+                <div className="mb-8 p-6 bg-gray-50 rounded-lg text-center">
+                  <p className="text-gray-600 mb-4">Please sign in to write a review</p>
+                  <button
+                    onClick={() => setAuthModalOpen(true)}
+                    className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                  >
+                    Sign In
+                  </button>
+                </div>
+              )}
+
+              {/* Reviews List */}
+              <div className="space-y-6">
+                {reviews.length > 0 ? (
+                  reviews.map((review) => (
+                    <div key={review.id} className="border-b border-gray-100 pb-6 last:border-0 last:pb-0">
+                      <div className="flex items-start gap-4">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm font-medium text-gray-700">
+                            {review.user.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium text-gray-900">{review.user.name}</h4>
+                            <div className="flex">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${
+                                    i < review.rating
+                                      ? 'fill-yellow-400 text-yellow-400'
+                                      : 'fill-gray-200 text-gray-200'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-sm font-medium text-gray-900 mb-1">{review.title}</p>
+                          <p className="text-sm text-gray-600 mb-2">{review.date}</p>
+                          <p className="text-gray-700">{review.comment}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center py-8">No reviews yet. Be the first to review this product!</p>
+                )}
+              </div>
+            </div>
           </motion.div>
         </div>
       </div>
+      
+      {product && (
+        <>
+          <RelatedProducts 
+            categoryId={product.category_id} 
+            currentProductId={product.id} 
+          />
+          <RecentlyViewed currentProductId={product.id} />
+        </>
+      )}
     </div>
   );
 }

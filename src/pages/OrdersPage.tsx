@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Package, ChevronRight } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { orderApi } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
 
 interface Order {
@@ -34,20 +34,12 @@ export function OrdersPage() {
     if (!user) return;
 
     setLoading(true);
-    const { data } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        order_items(
-          quantity,
-          price_at_time,
-          products(name, images)
-        )
-      `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (data) setOrders(data as Order[]);
+    try {
+      const data = await orderApi.getOrders(user.id);
+      if (data) setOrders(data as Order[]);
+    } catch (error) {
+      console.error('Fetch orders error:', error);
+    }
     setLoading(false);
   };
 

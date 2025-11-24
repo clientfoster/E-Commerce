@@ -28,18 +28,20 @@ A modern, high-end fashion e-commerce platform with interactive 3D product visua
 - **Animations**: GSAP + Framer Motion
 - **Styling**: Tailwind CSS
 - **State**: Zustand
-- **Database**: Supabase (PostgreSQL)
-- **Auth**: Supabase Auth
+- **Database**: MongoDB + Mongoose
+- **Auth**: JWT (JSON Web Tokens)
 
 ## Quick Start
 
-### 1. Configure Supabase
+### 1. Configure MongoDB
 
-Update `.env` with your Supabase credentials:
+Update `.env` with your MongoDB credentials:
 
 ```bash
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_MONGODB_URI=mongodb://localhost:27017/ecommerce
+# OR for MongoDB Atlas:
+# VITE_MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/ecommerce
+VITE_JWT_SECRET=your-secret-key-change-in-production
 ```
 
 ### 2. Install Dependencies
@@ -58,16 +60,16 @@ The application will be available at `http://localhost:5173`
 
 ## Database Setup
 
-The database schema includes:
-- **profiles** - User profiles with admin flags
+The database uses MongoDB with Mongoose schemas:
+- **users** - User accounts with authentication
 - **categories** - Product categories
 - **products** - Product catalog with 3D model support
-- **cart_items** - Shopping cart items
+- **cartitems** - Shopping cart items
 - **orders** - Order records
-- **order_items** - Individual order items
-- **product_reviews** - Customer reviews
+- **orderitems** - Individual order items
+- **productreviews** - Customer reviews
 
-Sample data is already seeded with 6 premium fashion products.
+Sample data can be seeded manually or through a seeding script.
 
 ## User Roles
 
@@ -84,9 +86,12 @@ Sample data is already seeded with 6 premium fashion products.
 - View all orders
 - Manage users
 
-To make a user an admin, update their profile in Supabase:
-```sql
-UPDATE profiles SET is_admin = true WHERE email = 'admin@example.com';
+To make a user an admin, update their document in MongoDB:
+```javascript
+db.users.updateOne(
+  { email: 'admin@example.com' },
+  { $set: { isAdmin: true } }
+);
 ```
 
 ## Project Structure
@@ -110,8 +115,17 @@ src/
 │   ├── authStore.ts     # Authentication state
 │   ├── cartStore.ts     # Shopping cart state
 │   └── uiStore.ts       # UI state (modals, etc)
+├── models/
+│   ├── User.ts           # User schema
+│   ├── Category.ts       # Category schema
+│   ├── Product.ts        # Product schema
+│   ├── CartItem.ts       # Cart item schema
+│   ├── Order.ts          # Order schema
+│   ├── OrderItem.ts      # Order item schema
+│   └── ProductReview.ts  # Review schema
 ├── lib/
-│   └── supabase.ts      # Supabase client
+│   ├── mongodb.ts        # MongoDB connection
+│   └── api.ts            # API service layer
 └── types/
     └── index.ts         # TypeScript types
 ```
@@ -132,6 +146,7 @@ src/
 5. **Product Reviews**: Enable customer reviews and ratings
 6. **AR Preview**: Add WebXR support for mobile AR try-on
 7. **Wishlist**: Add product wishlist functionality
+8. **Backend API**: Create Express.js backend for MongoDB operations
 
 ## Building for Production
 
@@ -143,7 +158,7 @@ The optimized production build will be in the `dist/` directory.
 
 ## Support
 
-For issues or questions, check the Supabase documentation:
-- https://supabase.com/docs
+For issues or questions, check the documentation:
+- https://mongoosejs.com/docs/
 - https://docs.pmnd.rs/react-three-fiber
 - https://www.framer.com/motion/

@@ -1,107 +1,68 @@
 import { create } from 'zustand';
-import { supabase } from '../lib/supabase';
-import type { User } from '@supabase/supabase-js';
-
-interface Profile {
-  id: string;
-  email: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  is_admin: boolean;
-}
+import { authApi, UserProfile } from '../lib/api';
 
 interface AuthState {
-  user: User | null;
-  profile: Profile | null;
+  user: { id: string; email: string } | null;
+  profile: UserProfile | null;
   loading: boolean;
+  token: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  initialize: () => Promise<void>;
+  signOut: () => void;
+  initialize: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   profile: null,
   loading: true,
+  token: null,
 
-  initialize: async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (session?.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .maybeSingle();
-
-      set({ user: session.user, profile, loading: false });
+  initialize: () => {
+    const token = localStorage.getItem('auth_token');
+    
+    if (token) {
+      const userId = authApi.verifyToken(token);
+      if (userId) {
+        authApi.getProfile(userId).then((profile) => {
+          if (profile) {
+            set({ 
+              user: { id: profile.id, email: profile.email }, 
+              profile, 
+              token,
+              loading: false 
+            });
+          } else {
+            localStorage.removeItem('auth_token');
+            set({ loading: false });
+          }
+        }).catch(() => {
+          localStorage.removeItem('auth_token');
+          set({ loading: false });
+        });
+      } else {
+        localStorage.removeItem('auth_token');
+        set({ loading: false });
+      }
     } else {
       set({ loading: false });
     }
-
-    supabase.auth.onAuthStateChange((_event, session) => {
-      (async () => {
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          set({ user: session.user, profile });
-        } else {
-          set({ user: null, profile: null });
-        }
-      })();
-    });
   },
 
   signIn: async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) throw error;
-
-    if (data.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user.id)
-        .maybeSingle();
-
-      set({ user: data.user, profile });
-    }
+    const { user, token, profile } = await authApi.signIn(email, password);
+    localStorage.setItem('auth_token', token);
+    set({ user, profile, token });
   },
 
   signUp: async (email: string, password: string, fullName: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) throw error;
-
-    if (data.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .insert({
-          id: data.user.id,
-          email,
-          full_name: fullName,
-          is_admin: false,
-        })
-        .select()
-        .single();
-
-      set({ user: data.user, profile });
-    }
+    const { user, token, profile } = await authApi.signUp(email, password, fullName);
+    localStorage.setItem('auth_token', token);
+    set({ user, profile, token });
   },
 
-  signOut: async () => {
-    await supabase.auth.signOut();
-    set({ user: null, profile: null });
+  signOut: () => {
+    localStorage.removeItem('auth_token');
+    set({ user: null, profile: null, token: null });
   },
 }));

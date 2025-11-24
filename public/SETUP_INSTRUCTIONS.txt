@@ -1,0 +1,36 @@
+=====================================================
+ATELIER E-COMMERCE - ADMIN SETUP INSTRUCTIONS
+=====================================================
+
+To create the first super admin account, follow these steps:
+
+1. Start the application servers:
+   npm run dev:all
+
+2. Open your browser and navigate to:
+   http://localhost:5173/setup
+
+3. Fill in the setup form with:
+   - Full Name: Your admin name
+   - Email: Your admin email
+   - Password: Minimum 8 characters
+   - Confirm Password: Same as password
+   - Secret Key: ATELIER_ADMIN_SETUP_2024
+
+4. Click "Create Super Admin"
+
+5. After successful setup, you'll be redirected to sign in
+
+IMPORTANT NOTES:
+================
+- This setup can only be completed ONCE
+- After the first admin is created, this page will be disabled
+- Keep the secret key secure
+- The admin will have full access to manage:
+  * Products
+  * Orders
+  * Users
+  * Categories
+  * All site content
+
+For support, contact your system administrator.

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase } from '../lib/supabase';
+import { cartApi } from '../lib/api';
 
 export interface CartItem {
   id: string;
@@ -34,17 +34,11 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   fetchCart: async (userId: string) => {
     set({ loading: true });
-    const { data, error } = await supabase
-      .from('cart_items')
-      .select(`
-        *,
-        product:products(name, price, images, slug)
-      `)
-      .eq('user_id', userId);
-
-    if (!error && data) {
-      set({ items: data as CartItem[], loading: false });
-    } else {
+    try {
+      const items = await cartApi.getCart(userId);
+      set({ items, loading: false });
+    } catch (error) {
+      console.error('Fetch cart error:', error);
       set({ loading: false });
     }
   },
@@ -61,20 +55,18 @@ export const useCartStore = create<CartState>((set, get) => ({
     if (existing) {
       await get().updateQuantity(existing.id, existing.quantity + item.quantity);
     } else {
-      const { data, error } = await supabase
-        .from('cart_items')
-        .insert({
-          user_id: userId,
-          ...item,
-        })
-        .select(`
-          *,
-          product:products(name, price, images, slug)
-        `)
-        .single();
-
-      if (!error && data) {
-        set({ items: [...get().items, data as CartItem] });
+      try {
+        const newItem = await cartApi.addToCart(
+          userId,
+          item.product_id,
+          item.quantity,
+          item.size || undefined,
+          item.color || undefined,
+          item.material || undefined
+        );
+        set({ items: [...get().items, newItem] });
+      } catch (error) {
+        console.error('Add to cart error:', error);
       }
     }
   },
@@ -85,39 +77,33 @@ export const useCartStore = create<CartState>((set, get) => ({
       return;
     }
 
-    const { error } = await supabase
-      .from('cart_items')
-      .update({ quantity })
-      .eq('id', itemId);
-
-    if (!error) {
+    try {
+      await cartApi.updateQuantity(itemId, quantity);
       set({
         items: get().items.map((item) =>
           item.id === itemId ? { ...item, quantity } : item
         ),
       });
+    } catch (error) {
+      console.error('Update quantity error:', error);
     }
   },
 
   removeItem: async (itemId: string) => {
-    const { error } = await supabase
-      .from('cart_items')
-      .delete()
-      .eq('id', itemId);
-
-    if (!error) {
+    try {
+      await cartApi.removeFromCart(itemId);
       set({ items: get().items.filter((item) => item.id !== itemId) });
+    } catch (error) {
+      console.error('Remove item error:', error);
     }
   },
 
   clearCart: async (userId: string) => {
-    const { error } = await supabase
-      .from('cart_items')
-      .delete()
-      .eq('user_id', userId);
-
-    if (!error) {
+    try {
+      await cartApi.clearCart(userId);
       set({ items: [] });
+    } catch (error) {
+      console.error('Clear cart error:', error);
     }
   },
 

@@ -1,6 +1,8 @@
 import { Instagram, Facebook, Twitter } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export function Footer() {
+  const navigate = useNavigate();
   return (
     <footer className="bg-gray-50 border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -16,45 +18,40 @@ export function Footer() {
             <h4 className="text-sm font-semibold text-gray-900 mb-4">Shop</h4>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-gray-900">
-                  New Arrivals
-                </a>
+                <button onClick={() => navigate('/shop')} className="text-sm text-gray-600 hover:text-gray-900">
+                  All Products
+                </button>
               </li>
               <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-gray-900">
+                <button onClick={() => navigate('/shop')} className="text-sm text-gray-600 hover:text-gray-900">
                   Collections
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-gray-900">
-                  Sale
-                </a>
+                <button onClick={() => navigate('/gift-card/purchase')} className="text-sm text-gray-600 hover:text-gray-900">
+                  Gift Cards
+                </button>
               </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-4">Support</h4>
+            <h4 className="text-sm font-semibold text-gray-900 mb-4">Company</h4>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-gray-900">
-                  Contact Us
-                </a>
+                <button onClick={() => navigate('/about')} className="text-sm text-gray-600 hover:text-gray-900">
+                  About Us
+                </button>
               </li>
               <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-gray-900">
-                  Shipping
-                </a>
+                <button onClick={() => navigate('/contact')} className="text-sm text-gray-600 hover:text-gray-900">
+                  Contact
+                </button>
               </li>
               <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-gray-900">
-                  Returns
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-gray-900">
-                  FAQ
-                </a>
+                <button onClick={() => navigate('/order-tracking')} className="text-sm text-gray-600 hover:text-gray-900">
+                  Order Tracking
+                </button>
               </li>
             </ul>
           </div>
