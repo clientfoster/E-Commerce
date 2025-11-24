@@ -106,6 +106,24 @@ interface Review {
   created_at: string;
 }
 
+interface Coupon {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  discountType: 'percentage' | 'fixed' | 'free_shipping';
+  discountValue: number;
+  minimumAmount?: number;
+  maximumDiscount?: number;
+  startDate: string;
+  endDate: string;
+  usageLimit?: number;
+  usedCount: number;
+  isActive: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 interface SiteSettings {
   id: string;
   site_name: string;
@@ -160,7 +178,7 @@ interface SiteSettings {
   updated_at: string;
 }
 
-type Tab = 'dashboard' | 'products' | 'orders' | 'users' | 'blogs' | 'categories' | 'reviews' | 'settings';
+type Tab = 'dashboard' | 'products' | 'orders' | 'users' | 'blogs' | 'categories' | 'reviews' | 'coupons' | 'settings';
 
 export function AdminPage() {
   const { signOut, profile } = useAuthStore();
@@ -173,6 +191,7 @@ export function AdminPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -192,6 +211,7 @@ export function AdminPage() {
     else if (activeTab === 'blogs') loadBlogs();
     else if (activeTab === 'categories') loadCategories();
     else if (activeTab === 'reviews') loadReviews();
+    else if (activeTab === 'coupons') loadCoupons();
     else if (activeTab === 'settings') loadSettings();
   }, [activeTab]);
 
@@ -425,6 +445,18 @@ export function AdminPage() {
     setLoading(false);
   };
 
+  const loadCoupons = async () => {
+    setLoading(true);
+    try {
+      const data = await adminApi.getAllCoupons();
+      setCoupons(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Load coupons error:', error);
+      setCoupons([]);
+    }
+    setLoading(false);
+  };
+
   const handleDeleteBlog = async (blogId: string) => {
     if (!confirm('Delete this blog post?')) return;
     try {
@@ -513,6 +545,7 @@ export function AdminPage() {
     { id: 'blogs' as Tab, label: 'Blog', icon: FileText },
     { id: 'categories' as Tab, label: 'Categories', icon: Tag },
     { id: 'reviews' as Tab, label: 'Reviews', icon: Star },
+    { id: 'coupons' as Tab, label: 'Coupons', icon: DollarSign },
     { id: 'users' as Tab, label: 'Users', icon: Users },
     { id: 'settings' as Tab, label: 'Settings', icon: Settings },
   ];
@@ -1223,6 +1256,107 @@ export function AdminPage() {
                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                 title="Delete post"
                               >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Coupons Content */}
+          {activeTab === 'coupons' && (
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Coupons</h3>
+                  <p className="text-sm text-gray-500 mt-1">Manage discount coupons</p>
+                </div>
+                <button className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors">
+                  <Plus className="w-4 h-4" />
+                  <span className="font-medium">Add Coupon</span>
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Coupon</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Code</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Discount</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Usage</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Valid Period</th>
+                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {loading ? (
+                      <tr>
+                        <td colSpan={7} className="px-6 py-16 text-center">
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                            <p className="text-gray-500">Loading coupons...</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : coupons.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-6 py-16 text-center">
+                          <div className="flex flex-col items-center gap-3">
+                            <DollarSign className="w-12 h-12 text-gray-300" />
+                            <p className="text-gray-500">No coupons found</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      coupons.map((coupon) => (
+                        <tr key={coupon.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4">
+                            <div>
+                              <p className="font-semibold text-gray-900 text-sm">{coupon.name}</p>
+                              <p className="text-xs text-gray-500 mt-0.5">ID: {coupon.id.slice(0, 8)}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="inline-flex px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">
+                              {coupon.code}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm font-bold text-gray-900">
+                            {coupon.discountType === 'percentage' ? (
+                              <>{coupon.discountValue}%</>
+                            ) : coupon.discountType === 'fixed' ? (
+                              <>${coupon.discountValue.toFixed(2)}</>
+                            ) : (
+                              <>Free Shipping</>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-xs text-gray-600">
+                              {coupon.usedCount} / {coupon.usageLimit || '∞'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${coupon.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                              <Circle className={`w-2 h-2 ${coupon.isActive ? 'fill-green-600' : 'fill-gray-400'}`} />
+                              {coupon.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {new Date(coupon.startDate).toLocaleDateString()} - {new Date(coupon.endDate).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center justify-end gap-2">
+                              <button className="p-2 text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>

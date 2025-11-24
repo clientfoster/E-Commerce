@@ -6,9 +6,11 @@ import { useAuthStore } from '../stores/authStore';
 import { useCartStore } from '../stores/cartStore';
 import { useDiscountStore } from '../stores/discountStore';
 import { useGiftCardStore } from '../stores/giftcardStore';
+import { useCouponStore } from '../stores/couponStore';
 import { orderApi } from '../lib/api';
 import { DiscountForm } from '../components/Checkout/DiscountForm';
 import { GiftCardForm } from '../components/Checkout/GiftCardForm';
+import { CouponForm } from '../components/Checkout/CouponForm';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
@@ -16,9 +18,11 @@ export function CheckoutPage() {
   const { items, getTotalPrice, clearCart } = useCartStore();
   const { appliedDiscount } = useDiscountStore();
   const { activeGiftCard } = useGiftCardStore();
+  const { appliedCoupon } = useCouponStore();
   const [loading, setLoading] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [giftCardAmount, setGiftCardAmount] = useState(0);
+  const [couponAmount, setCouponAmount] = useState(0);
 
   const calculateDiscountAmount = () => {
     if (!appliedDiscount) return 0;
@@ -57,7 +61,7 @@ export function CheckoutPage() {
     try {
       const subtotal = getTotalPrice();
       const discountAmount = calculateDiscountAmount();
-      const totalAmount = subtotal - discountAmount - giftCardAmount;
+      const totalAmount = subtotal - discountAmount - giftCardAmount - couponAmount;
       
       const orderData = {
         userId: user.id,
@@ -283,6 +287,21 @@ export function CheckoutPage() {
                 transition={{ delay: 0.1 }}
                 className="bg-white rounded-lg p-6 shadow-sm"
               >
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  Coupon
+                </h2>
+                <CouponForm 
+                  subtotal={getTotalPrice()}
+                  onDiscountApplied={setCouponAmount}
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white rounded-lg p-6 shadow-sm"
+              >
                 <div className="flex items-center gap-2 mb-4">
                   <CreditCard className="w-5 h-5" />
                   <h2 className="text-xl font-semibold text-gray-900">
@@ -339,7 +358,7 @@ export function CheckoutPage() {
                 disabled={loading}
                 className="w-full py-4 bg-gray-900 text-white rounded-full font-semibold hover:bg-gray-800 transition-colors disabled:bg-gray-400"
               >
-                {loading ? 'Processing...' : `Place Order - $${(getTotalPrice() - calculateDiscountAmount() - giftCardAmount).toFixed(2)}`}
+                {loading ? 'Processing...' : `Place Order - $${(getTotalPrice() - calculateDiscountAmount() - giftCardAmount - couponAmount).toFixed(2)}`}
               </motion.button>
             </form>
           </div>
@@ -393,13 +412,19 @@ export function CheckoutPage() {
                     <span className="font-medium text-red-600">-${giftCardAmount.toFixed(2)}</span>
                   </div>
                 )}
+                {couponAmount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Coupon</span>
+                    <span className="font-medium text-red-600">-${couponAmount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping</span>
                   <span className="font-medium">Free</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
                   <span>Total</span>
-                  <span>${(getTotalPrice() - calculateDiscountAmount() - giftCardAmount).toFixed(2)}</span>
+                  <span>${(getTotalPrice() - calculateDiscountAmount() - giftCardAmount - couponAmount).toFixed(2)}</span>
                 </div>
               </div>
             </div>

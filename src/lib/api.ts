@@ -484,4 +484,15 @@ export const adminApi = {
     });
     return response.json();
   },
+
+  // Coupons
+  getAllCoupons: async () => {
+    try {
+      const response = await fetch(`${API_URL}/admin/coupons`);
+      return response.json();
+    } catch (error) {
+      console.error('Network or unexpected error during get all coupons:', error);
+      return [];
+    }
+  },
 };

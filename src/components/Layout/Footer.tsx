@@ -57,6 +57,32 @@ export function Footer() {
           </div>
 
           <div>
+            <h4 className="text-sm font-semibold text-gray-900 mb-4">Legal</h4>
+            <ul className="space-y-2">
+              <li>
+                <button onClick={() => navigate('/terms')} className="text-sm text-gray-600 hover:text-gray-900">
+                  Terms of Service
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigate('/privacy')} className="text-sm text-gray-600 hover:text-gray-900">
+                  Privacy Policy
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigate('/returns')} className="text-sm text-gray-600 hover:text-gray-900">
+                  Returns Policy
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigate('/faq')} className="text-sm text-gray-600 hover:text-gray-900">
+                  FAQ
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div>
             <h4 className="text-sm font-semibold text-gray-900 mb-4">Follow Us</h4>
             <div className="flex gap-4">
               <a
