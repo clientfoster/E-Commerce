@@ -35,111 +35,113 @@ export function Header() {
           </div>
 
           {/* Center Navigation */}
-          <nav className="hidden md:flex items-center gap-6 absolute left-1/2 transform -translate-x-1/2">
-            <button
-              onClick={() => navigate('/')}
-              className={`text-sm font-medium transition-colors ${
-                currentPage === 'home'
-                  ? 'text-gray-900'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Home
-            </button>
-            <button
-              onClick={() => navigate('/shop')}
-              className={`text-sm font-medium transition-colors ${
-                currentPage === 'shop'
-                  ? 'text-gray-900'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Shop
-            </button>
-            <button 
-              onClick={() => navigate('/blog')}
-              className={`text-sm font-medium transition-colors ${
-                currentPage === 'blog'
-                  ? 'text-gray-900'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Blog
-            </button>
-            <button 
-              onClick={() => navigate('/about')}
-              className={`text-sm font-medium transition-colors ${
-                currentPage === 'about'
-                  ? 'text-gray-900'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              About
-            </button>
-            <button 
-              onClick={() => navigate('/contact')}
-              className={`text-sm font-medium transition-colors ${
-                currentPage === 'contact'
-                  ? 'text-gray-900'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Contact
-            </button>
-            
-            <button 
-              onClick={() => navigate('/compare')}
-              className={`text-sm font-medium transition-colors ${
-                currentPage === 'compare'
-                  ? 'text-gray-900'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Compare
-            </button>
-            
-            {/* Help Dropdown */}
-            <div className="relative group">
-              <button 
+          <nav className="hidden md:flex items-center justify-center flex-1 mx-8">
+            <div className="flex items-center gap-6">
+              <button
+                onClick={() => navigate('/')}
                 className={`text-sm font-medium transition-colors ${
-                  ['faq', 'size-guide', 'returns', 'terms', 'privacy'].includes(currentPage)
+                  currentPage === 'home'
                     ? 'text-gray-900'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Help
+                Home
               </button>
-              <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none group-hover:pointer-events-auto">
+              <button
+                onClick={() => navigate('/shop')}
+                className={`text-sm font-medium transition-colors ${
+                  currentPage === 'shop'
+                    ? 'text-gray-900'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Shop
+              </button>
+              <button 
+                onClick={() => navigate('/blog')}
+                className={`text-sm font-medium transition-colors ${
+                  currentPage === 'blog'
+                    ? 'text-gray-900'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Blog
+              </button>
+              <button 
+                onClick={() => navigate('/about')}
+                className={`text-sm font-medium transition-colors ${
+                  currentPage === 'about'
+                    ? 'text-gray-900'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                About
+              </button>
+              <button 
+                onClick={() => navigate('/contact')}
+                className={`text-sm font-medium transition-colors ${
+                  currentPage === 'contact'
+                    ? 'text-gray-900'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Contact
+              </button>
+              
+              <button 
+                onClick={() => navigate('/compare')}
+                className={`text-sm font-medium transition-colors ${
+                  currentPage === 'compare'
+                    ? 'text-gray-900'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Compare
+              </button>
+              
+              {/* Help Dropdown */}
+              <div className="relative group">
                 <button 
-                  onClick={() => navigate('/faq')}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className={`text-sm font-medium transition-colors ${
+                    ['faq', 'size-guide', 'returns', 'terms', 'privacy'].includes(currentPage)
+                      ? 'text-gray-900'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
                 >
-                  FAQ
+                  Help
                 </button>
-                <button 
-                  onClick={() => navigate('/size-guide')}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  Size Guide
-                </button>
-                <button 
-                  onClick={() => navigate('/returns')}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  Returns & Exchanges
-                </button>
-                <button 
-                  onClick={() => navigate('/terms')}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  Terms
-                </button>
-                <button 
-                  onClick={() => navigate('/privacy')}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  Privacy
-                </button>
+                <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none group-hover:pointer-events-auto">
+                  <button 
+                    onClick={() => navigate('/faq')}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    FAQ
+                  </button>
+                  <button 
+                    onClick={() => navigate('/size-guide')}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Size Guide
+                  </button>
+                  <button 
+                    onClick={() => navigate('/returns')}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Returns & Exchanges
+                  </button>
+                  <button 
+                    onClick={() => navigate('/terms')}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Terms
+                  </button>
+                  <button 
+                    onClick={() => navigate('/privacy')}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Privacy
+                  </button>
+                </div>
               </div>
             </div>
           </nav>
