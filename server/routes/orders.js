@@ -30,7 +30,7 @@ router.post('/', async (req, res) => {
       if (!item.productId || !item.quantity || item.quantity <= 0) {
         return res.status(400).json({ error: 'Invalid order item data' });
       }
-      
+
       // Verify product exists and is active
       const Product = (await import('../../src/models/Product.ts')).default;
       const product = await Product.findById(item.productId);
@@ -41,8 +41,8 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ error: `Product ${product.name} is no longer available` });
       }
       if (product.stockQuantity < item.quantity) {
-        return res.status(400).json({ 
-          error: `Insufficient stock for ${product.name}. Only ${product.stockQuantity} available` 
+        return res.status(400).json({
+          error: `Insufficient stock for ${product.name}. Only ${product.stockQuantity} available`
         });
       }
     }
@@ -101,6 +101,8 @@ router.get('/', async (req, res) => {
           status: order.status,
           total_amount: order.totalAmount,
           created_at: order.createdAt.toISOString(),
+          delivered_at: order.deliveredAt ? order.deliveredAt.toISOString() : null,
+          return_window_closed_at: order.returnWindowClosedAt ? order.returnWindowClosedAt.toISOString() : null,
           order_items: items.map(item => ({
             quantity: item.quantity,
             price_at_time: item.priceAtTime,
@@ -114,6 +116,63 @@ router.get('/', async (req, res) => {
     );
 
     res.json(ordersWithItems);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get single order
+router.get('/:orderId', async (req, res) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.orderId, userId: req.userId });
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const items = await OrderItem.find({ orderId: order._id }).populate('productId');
+
+    res.json({
+      id: order._id.toString(),
+      status: order.status,
+      total_amount: order.totalAmount,
+      shipping_address: order.shippingAddress,
+      billing_address: order.billingAddress,
+      created_at: order.createdAt.toISOString(),
+      delivered_at: order.deliveredAt ? order.deliveredAt.toISOString() : null,
+      return_window_closed_at: order.returnWindowClosedAt ? order.returnWindowClosedAt.toISOString() : null,
+      order_items: items.map(item => ({
+        quantity: item.quantity,
+        price_at_time: item.priceAtTime,
+        products: item.productId ? {
+          name: item.productId.name,
+          images: item.productId.images,
+        } : null,
+      })),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Return order
+router.put('/:orderId/return', async (req, res) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.orderId, userId: req.userId });
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    if (order.status !== 'delivered') {
+      return res.status(400).json({ error: 'Order is not eligible for return' });
+    }
+
+    if (new Date() > new Date(order.returnWindowClosedAt)) {
+      return res.status(400).json({ error: 'Return window has closed' });
+    }
+
+    order.status = 'returned';
+    await order.save();
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

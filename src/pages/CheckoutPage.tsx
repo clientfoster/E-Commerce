@@ -14,7 +14,7 @@ import { CouponForm } from '../components/Checkout/CouponForm';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, profile } = useAuthStore();
   const { items, getTotalPrice, clearCart } = useCartStore();
   const { appliedDiscount } = useDiscountStore();
   const { activeGiftCard } = useGiftCardStore();
@@ -26,15 +26,15 @@ export function CheckoutPage() {
 
   const calculateDiscountAmount = () => {
     if (!appliedDiscount) return 0;
-    
+
     const total = getTotalPrice();
-    
+
     if (appliedDiscount.discountType === 'percentage') {
       return (total * appliedDiscount.discountValue) / 100;
     } else if (appliedDiscount.discountType === 'fixed') {
       return appliedDiscount.discountValue;
     }
-    
+
     return 0;
   };
 
@@ -62,7 +62,7 @@ export function CheckoutPage() {
       const subtotal = getTotalPrice();
       const discountAmount = calculateDiscountAmount();
       const totalAmount = subtotal - discountAmount - giftCardAmount - couponAmount;
-      
+
       const orderData = {
         userId: user.id,
         subtotal,
@@ -169,6 +169,40 @@ export function CheckoutPage() {
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
                   Shipping Information
                 </h2>
+
+                {profile?.addresses && profile.addresses.length > 0 && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Use Saved Address
+                    </label>
+                    <select
+                      onChange={(e) => {
+                        const addr = profile.addresses?.find(a => a._id === e.target.value);
+                        if (addr) {
+                          setFormData(prev => ({
+                            ...prev,
+                            fullName: addr.fullName,
+                            phone: addr.phone,
+                            address: addr.address,
+                            city: addr.city,
+                            state: addr.state,
+                            zipCode: addr.zipCode,
+                            country: addr.country,
+                          }));
+                        }
+                      }}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    >
+                      <option value="">Select an address...</option>
+                      {profile.addresses.map(addr => (
+                        <option key={addr._id} value={addr._id}>
+                          {addr.type.toUpperCase()} - {addr.address}, {addr.city}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <input
                     type="text"
@@ -274,7 +308,7 @@ export function CheckoutPage() {
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
                   Gift Card
                 </h2>
-                <GiftCardForm 
+                <GiftCardForm
                   onApply={setGiftCardAmount}
                   totalAmount={getTotalPrice()}
                 />
@@ -289,7 +323,7 @@ export function CheckoutPage() {
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
                   Coupon
                 </h2>
-                <CouponForm 
+                <CouponForm
                   subtotal={getTotalPrice()}
                   onDiscountApplied={setCouponAmount}
                 />
@@ -357,7 +391,7 @@ export function CheckoutPage() {
                 disabled={loading}
                 className="w-full py-4 bg-gray-900 text-white rounded-full font-semibold hover:bg-gray-800 transition-colors disabled:bg-gray-400"
               >
-                {loading ? 'Processing...' : `Place Order - $${(getTotalPrice() - calculateDiscountAmount() - giftCardAmount - couponAmount).toFixed(2)}`}
+                {loading ? 'Processing...' : `Place Order - ₹${(getTotalPrice() - calculateDiscountAmount() - giftCardAmount - couponAmount).toFixed(2)}`}
               </motion.button>
             </form>
           </div>
@@ -367,7 +401,7 @@ export function CheckoutPage() {
             animate={{ opacity: 1, x: 0 }}
             className="lg:col-span-1"
           >
-            <div className="bg-white rounded-lg p-6 shadow-sm sticky top-24">
+            <div className="bg-white rounded-lg p-6 shadow-sm lg:sticky lg:top-24">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
                 Order Summary
               </h2>
@@ -387,7 +421,7 @@ export function CheckoutPage() {
                         Qty: {item.quantity}
                       </p>
                       <p className="text-sm font-semibold text-gray-900">
-                        ${((item.product?.price || 0) * item.quantity).toFixed(2)}
+                        ₹{((item.product?.price || 0) * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -397,24 +431,24 @@ export function CheckoutPage() {
               <div className="border-t border-gray-200 mt-6 pt-6 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">${getTotalPrice().toFixed(2)}</span>
+                  <span className="font-medium">₹{getTotalPrice().toFixed(2)}</span>
                 </div>
                 {appliedDiscount && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Discount ({appliedDiscount.code})</span>
-                    <span className="font-medium text-red-600">-${calculateDiscountAmount().toFixed(2)}</span>
+                    <span className="font-medium text-red-600">-₹{calculateDiscountAmount().toFixed(2)}</span>
                   </div>
                 )}
                 {giftCardAmount > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Gift Card</span>
-                    <span className="font-medium text-red-600">-${giftCardAmount.toFixed(2)}</span>
+                    <span className="font-medium text-red-600">-₹{giftCardAmount.toFixed(2)}</span>
                   </div>
                 )}
                 {couponAmount > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Coupon</span>
-                    <span className="font-medium text-red-600">-${couponAmount.toFixed(2)}</span>
+                    <span className="font-medium text-red-600">-₹{couponAmount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
@@ -423,7 +457,7 @@ export function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
                   <span>Total</span>
-                  <span>${(getTotalPrice() - calculateDiscountAmount() - giftCardAmount - couponAmount).toFixed(2)}</span>
+                  <span>₹{(getTotalPrice() - calculateDiscountAmount() - giftCardAmount - couponAmount).toFixed(2)}</span>
                 </div>
               </div>
             </div>

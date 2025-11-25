@@ -58,7 +58,7 @@ export function ProductPage() {
         if (productData.colors.length > 0) setSelectedColor(productData.colors[0]);
         if (productData.sizes.length > 0) setSelectedSize(productData.sizes[0]);
         if (productData.materials.length > 0) setSelectedMaterial(productData.materials[0].name);
-        
+
         // Set mock reviews for now - in a real app, these would come from the backend
         setReviews([
           {
@@ -101,20 +101,27 @@ export function ProductPage() {
 
     if (!product) return;
 
-    await addItem({
-      product_id: product.id,
-      quantity: 1,
-      size: selectedSize,
-      color: selectedColor?.name || null,
-      material: selectedMaterial,
-    });
+    try {
+      await addItem({
+        product_id: product.id,
+        quantity: 1,
+        size: selectedSize,
+        color: selectedColor?.name || null,
+        material: selectedMaterial,
+      });
 
-    setCartOpen(true);
+      // Show success feedback
+      setCartOpen(true);
+    } catch (error) {
+      console.error('Add to cart failed:', error);
+      // Show error message to user
+      alert(error instanceof Error ? error.message : 'Failed to add item to cart. Please try again.');
+    }
   };
 
   const handleToggleWishlist = () => {
     if (!product) return;
-    
+
     if (isInWishlist(product.slug)) {
       removeWishlistItem(product.slug);
     } else {
@@ -124,16 +131,16 @@ export function ProductPage() {
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
       setAuthModalOpen(true);
       return;
     }
-    
+
     if (!product) return;
-    
+
     setSubmittingReview(true);
-    
+
     try {
       // In a real app, this would be an API call to submit the review
       const newReview = {
@@ -144,12 +151,12 @@ export function ProductPage() {
         comment: reviewComment,
         date: new Date().toISOString().split('T')[0],
       };
-      
+
       setReviews(prev => [newReview, ...prev]);
       setReviewTitle('');
       setReviewComment('');
       setReviewRating(5);
-      
+
       // Show success message
       alert('Review submitted successfully!');
     } catch (error) {
@@ -218,22 +225,20 @@ export function ProductPage() {
             <div className="flex gap-2 mb-4">
               <button
                 onClick={() => setView('images')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  view === 'images'
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${view === 'images'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 Images
               </button>
               {product.model_url && (
                 <button
                   onClick={() => setView('3d')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    view === '3d'
-                      ? 'bg-gray-900 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${view === '3d'
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
                 >
                   3D View
                 </button>
@@ -298,7 +303,7 @@ export function ProductPage() {
                 {product.name}
               </h1>
               <p className="text-3xl font-bold text-gray-900">
-                ${product.price.toFixed(2)}
+                ₹{product.price.toFixed(2)}
               </p>
             </div>
 
@@ -306,11 +311,10 @@ export function ProductPage() {
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`w-5 h-5 ${
-                    i < 4
-                      ? 'fill-yellow-400 text-yellow-400'
-                      : 'fill-gray-200 text-gray-200'
-                  }`}
+                  className={`w-5 h-5 ${i < 4
+                    ? 'fill-yellow-400 text-yellow-400'
+                    : 'fill-gray-200 text-gray-200'
+                    }`}
                 />
               ))}
               <span className="text-sm text-gray-600 ml-2">(24 reviews)</span>
@@ -330,11 +334,10 @@ export function ProductPage() {
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setSelectedColor(color)}
-                      className={`w-10 h-10 rounded-full border-2 transition-all ${
-                        selectedColor?.name === color.name
-                          ? 'border-gray-900 shadow-lg'
-                          : 'border-gray-300'
-                      }`}
+                      className={`w-10 h-10 rounded-full border-2 transition-all ${selectedColor?.name === color.name
+                        ? 'border-gray-900 shadow-lg'
+                        : 'border-gray-300'
+                        }`}
                       style={{ backgroundColor: color.hex }}
                       title={color.name}
                     />
@@ -353,11 +356,10 @@ export function ProductPage() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setSelectedSize(size)}
-                      className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                        selectedSize === size
-                          ? 'bg-gray-900 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`px-6 py-3 rounded-lg font-medium transition-all ${selectedSize === size
+                        ? 'bg-gray-900 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       {size}
                     </motion.button>
@@ -378,11 +380,10 @@ export function ProductPage() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setSelectedMaterial(material.name)}
-                      className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                        selectedMaterial === material.name
-                          ? 'bg-gray-900 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`px-6 py-3 rounded-lg font-medium transition-all ${selectedMaterial === material.name
+                        ? 'bg-gray-900 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       {material.name}
                     </motion.button>
@@ -418,7 +419,7 @@ export function ProductPage() {
               <ul className="space-y-2 text-sm text-gray-600">
                 <li>• Premium quality materials</li>
                 <li>• Sustainable production</li>
-                <li>• Free shipping on orders over $100</li>
+                <li>• Free shipping on orders over ₹100</li>
                 <li>• 30-day return policy</li>
               </ul>
             </div>
@@ -432,11 +433,10 @@ export function ProductPage() {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-5 h-5 ${
-                          i < Math.floor(4.5)
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'fill-gray-200 text-gray-200'
-                        }`}
+                        className={`w-5 h-5 ${i < Math.floor(4.5)
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'fill-gray-200 text-gray-200'
+                          }`}
                       />
                     ))}
                   </div>
@@ -448,7 +448,7 @@ export function ProductPage() {
               {user ? (
                 <form onSubmit={handleSubmitReview} className="mb-8 p-6 bg-gray-50 rounded-lg">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Write a Review</h3>
-                  
+
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
                     <div className="flex gap-1">
@@ -460,17 +460,16 @@ export function ProductPage() {
                           className="text-2xl focus:outline-none"
                         >
                           <Star
-                            className={`w-6 h-6 ${
-                              star <= reviewRating
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'fill-gray-200 text-gray-200'
-                            }`}
+                            className={`w-6 h-6 ${star <= reviewRating
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'fill-gray-200 text-gray-200'
+                              }`}
                           />
                         </button>
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
                     <input
@@ -482,7 +481,7 @@ export function ProductPage() {
                       required
                     />
                   </div>
-                  
+
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Review</label>
                     <textarea
@@ -494,7 +493,7 @@ export function ProductPage() {
                       required
                     />
                   </div>
-                  
+
                   <button
                     type="submit"
                     disabled={submittingReview}
@@ -543,11 +542,10 @@ export function ProductPage() {
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
-                                  className={`w-4 h-4 ${
-                                    i < review.rating
-                                      ? 'fill-yellow-400 text-yellow-400'
-                                      : 'fill-gray-200 text-gray-200'
-                                  }`}
+                                  className={`w-4 h-4 ${i < review.rating
+                                    ? 'fill-yellow-400 text-yellow-400'
+                                    : 'fill-gray-200 text-gray-200'
+                                    }`}
                                 />
                               ))}
                             </div>
@@ -567,12 +565,12 @@ export function ProductPage() {
           </motion.div>
         </div>
       </div>
-      
+
       {product && (
         <>
-          <RelatedProducts 
-            categoryId={product.category_id} 
-            currentProductId={product.id} 
+          <RelatedProducts
+            categoryId={product.category_id}
+            currentProductId={product.id}
           />
           <RecentlyViewed currentProductId={product.id} />
         </>

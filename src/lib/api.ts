@@ -10,7 +10,7 @@ interface Review {
   created_at: string;
 }
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = '/api';
 
 // Helper function to get auth token
 const getAuthToken = () => {
@@ -26,12 +26,26 @@ const getAuthHeaders = () => {
   };
 };
 
+export interface Address {
+  _id?: string;
+  fullName: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  isDefault: boolean;
+  type: 'home' | 'work' | 'other';
+}
+
 export interface UserProfile {
   id: string;
   email: string;
   fullName: string | null;
   avatarUrl: string | null;
   isAdmin: boolean;
+  addresses?: Address[];
 }
 
 // Auth API
@@ -118,7 +132,7 @@ export const authApi = {
       const response = await fetch(`${API_URL}/auth/profile`, {
         headers: getAuthHeaders(),
       });
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           // Token expired or invalid
@@ -132,6 +146,65 @@ export const authApi = {
     } catch (error) {
       console.error('Get profile API error:', error);
       return null;
+    }
+  },
+
+  addAddress: async (address: Address) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/addresses`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(address),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Failed to add address' }));
+        throw new Error(error.error || `HTTP ${response.status}: Failed to add address`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Add address API error:', error);
+      throw error instanceof Error ? error : new Error('Failed to add address');
+    }
+  },
+
+  updateAddress: async (addressId: string, address: Address) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/addresses/${addressId}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(address),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Failed to update address' }));
+        throw new Error(error.error || `HTTP ${response.status}: Failed to update address`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Update address API error:', error);
+      throw error instanceof Error ? error : new Error('Failed to update address');
+    }
+  },
+
+  deleteAddress: async (addressId: string) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/addresses/${addressId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Failed to delete address' }));
+        throw new Error(error.error || `HTTP ${response.status}: Failed to delete address`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Delete address API error:', error);
+      throw error instanceof Error ? error : new Error('Failed to delete address');
     }
   },
 
@@ -209,7 +282,14 @@ export const cartApi = {
         throw new Error(error.error || `HTTP ${response.status}: Failed to add to cart`);
       }
 
-      return await response.json();
+      const result = await response.json();
+
+      // Validate response structure
+      if (!result || typeof result !== 'object' || !('id' in result)) {
+        throw new Error('Invalid response from server');
+      }
+
+      return result;
     } catch (error) {
       console.error('Add to cart API error:', error);
       throw error instanceof Error ? error : new Error('Failed to add to cart');
@@ -311,12 +391,12 @@ export const productApi = {
       if (filters?.page) params.append('page', String(filters.page));
 
       const response = await fetch(`${API_URL}/products?${params}`);
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Failed to fetch products' }));
         throw new Error(error.error || `HTTP ${response.status}: Failed to fetch products`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Get products API error:', error);
@@ -328,7 +408,7 @@ export const productApi = {
   getProductBySlug: async (slug: string) => {
     try {
       const response = await fetch(`${API_URL}/products/slug/${slug}`);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           return null;
@@ -336,7 +416,7 @@ export const productApi = {
         const error = await response.json().catch(() => ({ error: 'Failed to fetch product' }));
         throw new Error(error.error || `HTTP ${response.status}: Failed to fetch product`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Get product by slug API error:', error);
@@ -350,12 +430,12 @@ export const categoryApi = {
   getCategories: async () => {
     try {
       const response = await fetch(`${API_URL}/categories`);
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Failed to fetch categories' }));
         throw new Error(error.error || `HTTP ${response.status}: Failed to fetch categories`);
       }
-      
+
       const data = await response.json();
       return Array.isArray(data) ? data : [];
     } catch (error) {
@@ -416,18 +496,55 @@ export const orderApi = {
       const response = await fetch(`${API_URL}/orders`, {
         headers: getAuthHeaders(),
       });
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Failed to fetch orders' }));
         throw new Error(error.error || `HTTP ${response.status}: Failed to fetch orders`);
       }
-      
+
       const data = await response.json();
       return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error('Get orders API error:', error);
       // Return empty array on error to not break the UI
       return [];
+    }
+  },
+
+  getOrderById: async (orderId: string) => {
+    try {
+      const response = await fetch(`${API_URL}/orders/${orderId}`, {
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Failed to fetch order' }));
+        throw new Error(error.error || `HTTP ${response.status}: Failed to fetch order`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Get order API error:', error);
+      return null;
+    }
+  },
+
+  returnOrder: async (orderId: string) => {
+    try {
+      const response = await fetch(`${API_URL}/orders/${orderId}/return`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Failed to return order' }));
+        throw new Error(error.error || `HTTP ${response.status}: Failed to return order`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Return order API error:', error);
+      throw error instanceof Error ? error : new Error('Failed to return order');
     }
   },
 };
@@ -583,12 +700,12 @@ export const adminApi = {
   getAllCategories: async () => {
     try {
       const response = await fetch(`${API_URL}/admin/categories`);
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Failed to fetch categories' }));
         throw new Error(error.error || `HTTP ${response.status}: Failed to fetch categories`);
       }
-      
+
       const data = await response.json();
       return Array.isArray(data) ? data : [];
     } catch (error) {
@@ -607,18 +724,18 @@ export const adminApi = {
         description: categoryData.description,
         imageUrl: categoryData.image_url,
       };
-      
+
       const response = await fetch(`${API_URL}/admin/categories`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(transformedData),
       });
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Failed to create category' }));
         throw new Error(error.error || `HTTP ${response.status}: Failed to create category`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Create category API error:', error);
@@ -635,18 +752,18 @@ export const adminApi = {
         description: updates.description,
         imageUrl: updates.image_url,
       };
-      
+
       const response = await fetch(`${API_URL}/admin/categories/${categoryId}`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify(transformedData),
       });
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Failed to update category' }));
         throw new Error(error.error || `HTTP ${response.status}: Failed to update category`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Update category API error:', error);
@@ -660,12 +777,12 @@ export const adminApi = {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Failed to delete category' }));
         throw new Error(error.error || `HTTP ${response.status}: Failed to delete category`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Delete category API error:', error);
@@ -679,12 +796,12 @@ export const adminApi = {
       const response = await fetch(`${API_URL}/admin/reviews`, {
         headers: getAuthHeaders(),
       });
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Failed to fetch reviews' }));
         throw new Error(error.error || `HTTP ${response.status}: Failed to fetch reviews`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Get all reviews API error:', error);
@@ -698,12 +815,12 @@ export const adminApi = {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Failed to delete review' }));
         throw new Error(error.error || `HTTP ${response.status}: Failed to delete review`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Delete review API error:', error);
@@ -717,12 +834,12 @@ export const adminApi = {
       const response = await fetch(`${API_URL}/admin/coupons`, {
         headers: getAuthHeaders(),
       });
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Failed to fetch coupons' }));
         throw new Error(error.error || `HTTP ${response.status}: Failed to fetch coupons`);
       }
-      
+
       const data = await response.json();
       return Array.isArray(data) ? data : [];
     } catch (error) {

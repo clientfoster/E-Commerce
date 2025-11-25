@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Package, ChevronRight } from 'lucide-react';
 import { orderApi } from '../lib/api';
@@ -20,6 +21,7 @@ interface Order {
 }
 
 export function OrdersPage() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuthStore();
@@ -103,7 +105,7 @@ export function OrdersPage() {
                 transition={{ delay: index * 0.05 }}
                 className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
               >
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-2">
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">
                       Order #{order.id.slice(0, 8)}
@@ -117,7 +119,7 @@ export function OrdersPage() {
                     </p>
                   </div>
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                    className={`px-3 py-1 rounded-full text-xs font-medium self-start sm:self-auto ${getStatusColor(
                       order.status
                     )}`}
                   >
@@ -152,9 +154,12 @@ export function OrdersPage() {
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                   <span className="text-lg font-bold text-gray-900">
-                    ${order.total_amount.toFixed(2)}
+                    ₹{order.total_amount.toFixed(2)}
                   </span>
-                  <button className="flex items-center gap-1 text-sm font-medium text-gray-900 hover:text-gray-700">
+                  <button
+                    onClick={() => navigate(`/orders/${order.id}`)}
+                    className="flex items-center gap-1 text-sm font-medium text-gray-900 hover:text-gray-700"
+                  >
                     View Details
                     <ChevronRight className="w-4 h-4" />
                   </button>

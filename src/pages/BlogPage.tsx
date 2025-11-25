@@ -37,8 +37,8 @@ export function BlogPage() {
     try {
       const url =
         selectedCategory === 'all'
-          ? 'http://localhost:5000/api/blog'
-          : `http://localhost:5000/api/blog?category=${selectedCategory}`;
+          ? '/api/blog'
+          : `/api/blog?category=${selectedCategory}`;
 
       const response = await fetch(url);
       if (response.ok) {
@@ -54,7 +54,7 @@ export function BlogPage() {
 
   const loadCategories = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/blog/meta/categories');
+      const response = await fetch('/api/blog/meta/categories');
       if (response.ok) {
         const data = await response.json();
         setCategories(data);
@@ -113,11 +113,10 @@ export function BlogPage() {
         >
           <button
             onClick={() => setSelectedCategory('all')}
-            className={`px-6 py-2.5 rounded-full font-medium transition-all ${
-              selectedCategory === 'all'
-                ? 'bg-gray-900 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-6 py-2.5 rounded-full font-medium transition-all ${selectedCategory === 'all'
+              ? 'bg-gray-900 text-white shadow-lg'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             All Articles
           </button>
@@ -125,11 +124,10 @@ export function BlogPage() {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-2.5 rounded-full font-medium transition-all ${
-                selectedCategory === category
-                  ? 'bg-gray-900 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-6 py-2.5 rounded-full font-medium transition-all ${selectedCategory === category
+                ? 'bg-gray-900 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               {category}
             </button>

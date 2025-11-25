@@ -1,12 +1,25 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+export interface IAddress {
+  fullName: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  isDefault: boolean;
+  type: 'home' | 'work' | 'other';
+}
+
 export interface IUser extends Document {
   email: string;
   password: string;
   fullName?: string;
   avatarUrl?: string;
   isAdmin: boolean;
+  addresses: IAddress[];
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -36,6 +49,24 @@ const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    addresses: [{
+      type: {
+        type: String,
+        enum: ['home', 'work', 'other'],
+        default: 'home'
+      },
+      fullName: String,
+      phone: String,
+      address: String,
+      city: String,
+      state: String,
+      zipCode: String,
+      country: String,
+      isDefault: {
+        type: Boolean,
+        default: false
+      }
+    }],
   },
   {
     timestamps: true,

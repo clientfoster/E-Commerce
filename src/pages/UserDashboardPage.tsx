@@ -66,7 +66,7 @@ export function UserDashboardPage() {
       navigate('/');
       return;
     }
-    
+
     loadDashboardData();
   }, [user]);
 
@@ -82,7 +82,7 @@ export function UserDashboardPage() {
       // Load orders
       const ordersData = await orderApi.getOrders();
       if (ordersData) setOrders(ordersData as Order[]);
-      
+
       // Load gift cards (uses token, no userId needed)
       getUserGiftCards();
     } catch (error) {
@@ -104,11 +104,11 @@ export function UserDashboardPage() {
 
   const loadWishlistProducts = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       const wishlistItems = await wishlistApi.getWishlist();
-      
+
       // Transform wishlist items to Product format for display, keeping wishlist item ID
       const products = wishlistItems.map((item: any) => ({
         id: item.product_id,
@@ -129,7 +129,7 @@ export function UserDashboardPage() {
         updated_at: item.created_at,
         wishlistItemId: item.id, // Store the wishlist item ID for removal
       }));
-      
+
       setWishlistProducts(products);
     } catch (error) {
       console.error('Load wishlist products error:', error);
@@ -294,9 +294,9 @@ export function UserDashboardPage() {
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                     {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                   </span>
-                  <span className="font-semibold text-gray-900">${order.total_amount.toFixed(2)}</span>
+                  <span className="font-semibold text-gray-900">₹{order.total_amount.toFixed(2)}</span>
                   <button
-                    onClick={() => navigate(`/order-tracking?orderId=${order.id}`)}
+                    onClick={() => navigate(`/orders/${order.id}`)}
                     className="text-blue-600 hover:text-blue-800"
                   >
                     <Eye className="w-4 h-4" />
@@ -414,7 +414,7 @@ export function UserDashboardPage() {
                   {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                 </span>
               </div>
-              
+
               <div className="space-y-3 mb-4">
                 {order.order_items.slice(0, 2).map((item, i) => (
                   <div key={i} className="flex gap-3">
@@ -433,11 +433,11 @@ export function UserDashboardPage() {
                   <p className="text-sm text-gray-500">+{order.order_items.length - 2} more items</p>
                 )}
               </div>
-              
+
               <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                <span className="text-lg font-bold text-gray-900">${order.total_amount.toFixed(2)}</span>
+                <span className="text-lg font-bold text-gray-900">₹{order.total_amount.toFixed(2)}</span>
                 <button
-                  onClick={() => navigate(`/order-tracking?orderId=${order.id}`)}
+                  onClick={() => navigate(`/orders/${order.id}`)}
                   className="flex items-center gap-1 text-sm font-medium text-gray-900 hover:text-gray-700"
                 >
                   Track Order
@@ -464,7 +464,7 @@ export function UserDashboardPage() {
           </button>
         )}
       </div>
-      
+
       {loading ? (
         <div className="bg-white rounded-lg shadow-sm p-8">
           <div className="animate-pulse space-y-4">
@@ -504,7 +504,7 @@ export function UserDashboardPage() {
                     className="w-24 h-24 object-cover rounded-lg cursor-pointer"
                     onClick={() => navigate(`/product/${product.slug}`)}
                   />
-                  
+
                   <div className="flex-1">
                     <h3
                       className="text-lg font-semibold text-gray-900 mb-1 cursor-pointer hover:text-gray-700"
@@ -512,8 +512,8 @@ export function UserDashboardPage() {
                     >
                       {product.name}
                     </h3>
-                    <p className="text-xl font-bold text-gray-900 mb-3">${product.price.toFixed(2)}</p>
-                    
+                    <p className="text-gray-900 font-bold">₹{product.price.toFixed(2)}</p>
+
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => handleAddToCartFromWishlist(product)}
@@ -586,7 +586,7 @@ export function UserDashboardPage() {
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
                       <div>
                         <span className="font-medium">Code:</span> {card.code}
@@ -599,7 +599,7 @@ export function UserDashboardPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-col sm:flex-row gap-2">
                     {!card.isRedeemed && card.currentBalance > 0 && (
                       <button
@@ -609,7 +609,7 @@ export function UserDashboardPage() {
                         {copiedCardId === card._id.toString() ? 'Copied!' : 'Copy Code'}
                       </button>
                     )}
-                    
+
                     <button
                       onClick={() => window.print()}
                       className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
@@ -639,7 +639,7 @@ export function UserDashboardPage() {
             <p className="text-gray-600">{user?.email}</p>
           </div>
         </div>
-        
+
         <div className="border-t border-gray-200 pt-6">
           <button
             onClick={() => navigate('/profile')}
@@ -680,68 +680,63 @@ export function UserDashboardPage() {
             </button>
           </div>
         </div>
-        
+
         <nav className="p-4 space-y-2">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-              activeTab === 'dashboard'
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${activeTab === 'dashboard'
+              ? 'bg-gray-900 text-white'
+              : 'text-gray-700 hover:bg-gray-100'
+              }`}
           >
             <LayoutDashboard className="w-5 h-5" />
             {sidebarOpen && <span>Dashboard</span>}
           </button>
-          
+
           <button
             onClick={() => setActiveTab('orders')}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-              activeTab === 'orders'
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${activeTab === 'orders'
+              ? 'bg-gray-900 text-white'
+              : 'text-gray-700 hover:bg-gray-100'
+              }`}
           >
             <Package2 className="w-5 h-5" />
             {sidebarOpen && <span>Orders</span>}
           </button>
-          
+
           <button
             onClick={() => setActiveTab('wishlist')}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-              activeTab === 'wishlist'
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${activeTab === 'wishlist'
+              ? 'bg-gray-900 text-white'
+              : 'text-gray-700 hover:bg-gray-100'
+              }`}
           >
             <Heart className="w-5 h-5" />
             {sidebarOpen && <span>Wishlist</span>}
           </button>
-          
+
           <button
             onClick={() => setActiveTab('gift-cards')}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-              activeTab === 'gift-cards'
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${activeTab === 'gift-cards'
+              ? 'bg-gray-900 text-white'
+              : 'text-gray-700 hover:bg-gray-100'
+              }`}
           >
             <Gift className="w-5 h-5" />
             {sidebarOpen && <span>Gift Cards</span>}
           </button>
-          
+
           <button
             onClick={() => setActiveTab('profile')}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-              activeTab === 'profile'
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${activeTab === 'profile'
+              ? 'bg-gray-900 text-white'
+              : 'text-gray-700 hover:bg-gray-100'
+              }`}
           >
             <User className="w-5 h-5" />
             {sidebarOpen && <span>Profile</span>}
           </button>
-          
+
           <button
             onClick={signOut}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors text-red-600 hover:bg-red-50`}
@@ -751,7 +746,7 @@ export function UserDashboardPage() {
           </button>
         </nav>
       </div>
-      
+
       {/* Main Content */}
       <div className={`${sidebarOpen ? 'ml-0' : 'ml-0'} flex-1`}>
         <div className="max-w-6xl mx-auto p-6">

@@ -27,7 +27,7 @@ export function ShopPage() {
         // In a real implementation, we would pass the filters and sorting to the API
         // For now, we'll handle filtering on the client side
       });
-      
+
       if (data && Array.isArray(data.products)) {
         if (pageNum === 1) {
           setProducts(data.products as Product[]);
@@ -45,21 +45,21 @@ export function ShopPage() {
     const fetchData = async () => {
       setLoading(true);
       setPage(1);
-      
+
       try {
         const [categoriesData] = await Promise.all([
           categoryApi.getCategories(),
           loadProducts(1)
         ]);
-        
+
         if (categoriesData) setCategories(categoriesData as Category[]);
       } catch (error) {
         console.error('Fetch data error:', error);
       }
-      
+
       setLoading(false);
     };
-    
+
     fetchData();
   }, [selectedCategory, loadProducts]);
 
@@ -131,11 +131,10 @@ export function ShopPage() {
                   <div className="space-y-2">
                     <button
                       onClick={() => setSelectedCategory(null)}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                        selectedCategory === null
-                          ? 'bg-gray-900 text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${selectedCategory === null
+                        ? 'bg-gray-900 text-white'
+                        : 'text-gray-700 hover:bg-gray-100'
+                        }`}
                     >
                       All Products
                     </button>
@@ -143,11 +142,10 @@ export function ShopPage() {
                       <button
                         key={category.id}
                         onClick={() => setSelectedCategory(category.id)}
-                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                          selectedCategory === category.id
-                            ? 'bg-gray-900 text-white'
-                            : 'text-gray-700 hover:bg-gray-100'
-                        }`}
+                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${selectedCategory === category.id
+                          ? 'bg-gray-900 text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
+                          }`}
                       >
                         {category.name}
                       </button>
@@ -172,8 +170,8 @@ export function ShopPage() {
                       className="w-full"
                     />
                     <div className="flex items-center justify-between text-sm text-gray-600">
-                      <span>${priceRange[0]}</span>
-                      <span>${priceRange[1]}</span>
+                      <span>₹{priceRange[0]}</span>
+                      <span>₹{priceRange[1]}</span>
                     </div>
                   </div>
                 </div>
@@ -222,7 +220,7 @@ export function ShopPage() {
                 </div>
               )}
             </div>
-            
+
             {/* Gift Cards Section */}
             <div className="mt-16 pt-8 border-t border-gray-200">
               <div className="text-center mb-8">
@@ -231,7 +229,7 @@ export function ShopPage() {
                   Give the gift of choice with an ATELIER gift card. Perfect for any occasion.
                 </p>
               </div>
-              
+
               <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-8 max-w-4xl mx-auto">
                 <div className="flex flex-col md:flex-row items-center gap-8">
                   <div className="flex-1 text-center md:text-left">
@@ -254,7 +252,7 @@ export function ShopPage() {
                         <p className="text-sm text-gray-600 mb-3">Digital Card</p>
                         <div className="bg-gray-100 rounded p-2 text-center">
                           <p className="text-xs text-gray-500">Amount</p>
-                          <p className="font-semibold text-gray-900">$25 - $500</p>
+                          <p className="font-semibold text-gray-900">₹25 - ₹500</p>
                         </div>
                       </div>
                     </div>

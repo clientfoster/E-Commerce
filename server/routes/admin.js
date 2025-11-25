@@ -177,7 +177,15 @@ router.get('/orders', verifyToken, verifyAdmin, async (req, res) => {
 // Update order status
 router.put('/orders/:orderId', verifyToken, verifyAdmin, async (req, res) => {
   try {
-    await Order.findByIdAndUpdate(req.params.orderId, { status: req.body.status });
+    const updateData = { status: req.body.status };
+    if (req.body.status === 'delivered') {
+      updateData.deliveredAt = new Date();
+      // Set return window to 7 days from now
+      const returnWindow = new Date();
+      returnWindow.setDate(returnWindow.getDate() + 7);
+      updateData.returnWindowClosedAt = returnWindow;
+    }
+    await Order.findByIdAndUpdate(req.params.orderId, updateData);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });

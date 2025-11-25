@@ -2,11 +2,13 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IOrder extends Document {
   userId: mongoose.Types.ObjectId;
-  status: string;
+  status: 'pending' | 'confirmed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'returned';
   totalAmount: number;
   shippingAddress: Record<string, string>;
   billingAddress: Record<string, string>;
   stripePaymentIntentId?: string;
+  deliveredAt?: Date;
+  returnWindowClosedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,7 +24,7 @@ const OrderSchema = new Schema<IOrder>(
       type: String,
       required: true,
       default: 'pending',
-      enum: ['pending', 'paid', 'shipped', 'delivered', 'cancelled'],
+      enum: ['pending', 'confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'returned'],
     },
     totalAmount: {
       type: Number,
@@ -40,6 +42,12 @@ const OrderSchema = new Schema<IOrder>(
     },
     stripePaymentIntentId: {
       type: String,
+    },
+    deliveredAt: {
+      type: Date,
+    },
+    returnWindowClosedAt: {
+      type: Date,
     },
   },
   {

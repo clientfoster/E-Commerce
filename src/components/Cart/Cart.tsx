@@ -88,7 +88,7 @@ export function Cart() {
                             {item.color && ` • ${item.color}`}
                           </p>
                           <p className="text-sm font-medium text-gray-900 mt-1">
-                            ${item.product?.price.toFixed(2)}
+                            ₹{item.product?.price.toFixed(2)}
                           </p>
 
                           <div className="flex items-center gap-2 mt-2">
@@ -133,7 +133,7 @@ export function Cart() {
                       Total
                     </span>
                     <span className="text-2xl font-bold text-gray-900">
-                      ${getTotalPrice().toFixed(2)}
+                      ₹{getTotalPrice().toFixed(2)}
                     </span>
                   </div>
 

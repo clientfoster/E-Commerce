@@ -38,7 +38,7 @@ export function AdminSetupPage() {
     setLoading(true);
 
     try {
-      console.log('Sending setup request to:', 'http://localhost:5000/api/admin/setup');
+      console.log('Sending setup request to:', '/api/admin/setup');
       console.log('Request body:', {
         email: formData.email,
         password: '***',
@@ -46,7 +46,7 @@ export function AdminSetupPage() {
         secretKey: '***',
       });
 
-      const response = await fetch('http://localhost:5000/api/admin/setup', {
+      const response = await fetch('/api/admin/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -59,7 +59,7 @@ export function AdminSetupPage() {
 
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
-      
+
       const contentType = response.headers.get('content-type');
       console.log('Content-Type:', contentType);
 

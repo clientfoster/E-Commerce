@@ -1,6 +1,6 @@
 import type { IGiftCard } from '../../models/GiftCard';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = '/api';
 
 // Helper function to get auth token
 const getAuthToken = () => {
@@ -44,7 +44,7 @@ export const giftcardApi = {
   createGiftCard: async (giftCardData: Partial<IGiftCard>): Promise<GiftCardResponse> => {
     try {
       const { initialAmount, recipientEmail, recipientName, message } = giftCardData;
-      
+
       if (!initialAmount || initialAmount < 10) {
         return {
           success: false,

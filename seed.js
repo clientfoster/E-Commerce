@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const MONGODB_URI = process.env.VITE_MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI || process.env.VITE_MONGODB_URI;
 
 async function seedDatabase() {
   try {
@@ -324,6 +324,102 @@ async function seedDatabase() {
         ],
         stockQuantity: 55,
         isFeatured: false,
+        isActive: true,
+      },
+      // New products
+      {
+        name: 'Suede Chelsea Boots',
+        slug: 'suede-chelsea-boots',
+        description: 'Handcrafted suede chelsea boots with elastic side panels and rounded toe. Premium leather lining for comfort.',
+        price: 245.00,
+        categoryId: categories[2]._id,
+        images: [
+          'https://images.pexels.com/photos/2043079/pexels-photo-2043079.jpeg',
+          'https://images.pexels.com/photos/2929987/pexels-photo-2929987.jpeg',
+        ],
+        sizes: ['36', '37', '38', '39', '40', '41'],
+        colors: [
+          { name: 'Brown', hex: '#8b4513' },
+          { name: 'Black', hex: '#000000' },
+          { name: 'Burgundy', hex: '#800020' },
+        ],
+        materials: [
+          { name: 'Suede Leather' },
+          { name: 'Leather Lining' },
+        ],
+        stockQuantity: 40,
+        isFeatured: true,
+        isActive: true,
+      },
+      {
+        name: 'Wool Blend Coat',
+        slug: 'wool-blend-coat',
+        description: 'Classic wool blend coat with notched lapels and button-front closure. Fully lined for warmth and comfort.',
+        price: 375.00,
+        categoryId: categories[0]._id,
+        images: [
+          'https://images.pexels.com/photos/1021693/pexels-photo-1021693.jpeg',
+          'https://images.pexels.com/photos/1018911/pexels-photo-1018911.jpeg',
+        ],
+        sizes: ['XS', 'S', 'M', 'L', 'XL'],
+        colors: [
+          { name: 'Camel', hex: '#c19a6b' },
+          { name: 'Black', hex: '#000000' },
+          { name: 'Gray', hex: '#808080' },
+        ],
+        materials: [
+          { name: 'Wool Blend' },
+          { name: 'Polyester Lining' },
+        ],
+        stockQuantity: 30,
+        isFeatured: true,
+        isActive: true,
+      },
+      {
+        name: 'Silk Scarf',
+        slug: 'silk-scarf',
+        description: 'Luxurious silk scarf with hand-rolled edges. Lightweight and versatile for any season.',
+        price: 89.00,
+        categoryId: categories[1]._id,
+        images: [
+          'https://images.pexels.com/photos/1078983/pexels-photo-1078983.jpeg',
+          'https://images.pexels.com/photos/1078958/pexels-photo-1078958.jpeg',
+        ],
+        sizes: ['One Size'],
+        colors: [
+          { name: 'Multicolor', hex: '#ff6b6b' },
+          { name: 'Blue', hex: '#4169e1' },
+          { name: 'Black', hex: '#000000' },
+        ],
+        materials: [
+          { name: 'Pure Silk' },
+        ],
+        stockQuantity: 100,
+        isFeatured: false,
+        isActive: true,
+      },
+      {
+        name: 'Leather Crossbody Bag',
+        slug: 'leather-crossbody-bag',
+        description: 'Compact leather crossbody bag with adjustable strap and multiple compartments. Perfect for everyday essentials.',
+        price: 199.00,
+        categoryId: categories[1]._id,
+        images: [
+          'https://images.pexels.com/photos/1152088/pexels-photo-1152088.jpeg',
+          'https://images.pexels.com/photos/1464625/pexels-photo-1464625.jpeg',
+        ],
+        sizes: ['One Size'],
+        colors: [
+          { name: 'Black', hex: '#000000' },
+          { name: 'Tan', hex: '#d2b48c' },
+          { name: 'Burgundy', hex: '#800020' },
+        ],
+        materials: [
+          { name: 'Genuine Leather' },
+          { name: 'Canvas Lining' },
+        ],
+        stockQuantity: 35,
+        isFeatured: true,
         isActive: true,
       },
     ]);

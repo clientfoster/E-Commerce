@@ -12,7 +12,7 @@ router.use(verifyToken);
 router.get('/', async (req, res) => {
   try {
     if (!req.userId) {
-      return res.status(401).json({ error: 'User ID is required' });
+      return res.status(401).json({ error: 'User not authenticated' });
     }
 
     const items = await CartItem.find({ userId: req.userId }).populate('productId');
@@ -36,13 +36,21 @@ router.get('/', async (req, res) => {
     })));
   } catch (error) {
     console.error('Get cart error:', error);
-    res.status(500).json({ error: 'Failed to fetch cart items' });
+    res.status(500).json({ error: 'Failed to fetch cart items: ' + error.message });
   }
 });
 
 // Add to cart
 router.post('/', async (req, res) => {
   try {
+    // Validate userId from token
+    if (!req.userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+    
+    // Debug log
+    console.log('User ID from token:', req.userId);
+    
     const { productId, quantity, size, color, material } = req.body;
 
     // Validate required fields
@@ -67,6 +75,16 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Debug log
+    console.log('Creating cart item with data:', {
+      userId: req.userId,
+      productId,
+      quantity,
+      size,
+      color,
+      material,
+    });
+    
     const item = await CartItem.create({
       userId: req.userId,
       productId,
@@ -75,10 +93,12 @@ router.post('/', async (req, res) => {
       color,
       material,
     });
+    
+    console.log('Cart item created successfully:', item._id);
 
     const populatedItem = await CartItem.findById(item._id).populate('productId');
     
-    if (!populatedItem.productId) {
+    if (!populatedItem || !populatedItem.productId) {
       return res.status(404).json({ error: 'Product not found after adding to cart' });
     }
 
@@ -102,13 +122,21 @@ router.post('/', async (req, res) => {
       const errors = Object.values(error.errors).map(err => err.message);
       return res.status(400).json({ error: 'Validation failed: ' + errors.join(', ') });
     }
-    res.status(500).json({ error: 'Failed to add item to cart' });
+    // Handle MongoDB duplicate key errors
+    if (error.code === 11000) {
+      return res.status(400).json({ error: 'Item already exists in cart' });
+    }
+    res.status(500).json({ error: 'Failed to add item to cart: ' + error.message });
   }
 });
 
 // Update quantity
 router.put('/:itemId', async (req, res) => {
   try {
+    if (!req.userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+    
     const { quantity } = req.body;
     
     // Validate quantity
@@ -137,13 +165,17 @@ router.put('/:itemId', async (req, res) => {
     if (error.name === 'CastError') {
       return res.status(400).json({ error: 'Invalid item ID format' });
     }
-    res.status(500).json({ error: 'Failed to update cart item quantity' });
+    res.status(500).json({ error: 'Failed to update cart item quantity: ' + error.message });
   }
 });
 
 // Remove item
 router.delete('/:itemId', async (req, res) => {
   try {
+    if (!req.userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+    
     const item = await CartItem.findOne({ _id: req.params.itemId, userId: req.userId });
     if (!item) {
       return res.status(404).json({ error: 'Cart item not found' });
@@ -152,17 +184,23 @@ router.delete('/:itemId', async (req, res) => {
     await CartItem.findByIdAndDelete(req.params.itemId);
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Remove cart item error:', error);
+    res.status(500).json({ error: 'Failed to remove cart item: ' + error.message });
   }
 });
 
 // Clear cart
 router.delete('/', async (req, res) => {
   try {
+    if (!req.userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+    
     await CartItem.deleteMany({ userId: req.userId });
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Clear cart error:', error);
+    res.status(500).json({ error: 'Failed to clear cart: ' + error.message });
   }
 });
 

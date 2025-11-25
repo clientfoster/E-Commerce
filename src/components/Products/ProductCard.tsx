@@ -27,14 +27,14 @@ export function ProductCard({ product, showCompareButton = true }: ProductCardPr
 
   const handleCompare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     // Get existing compared products from localStorage
     const comparedProducts = localStorage.getItem('comparedProducts');
     let products = comparedProducts ? JSON.parse(comparedProducts) : [];
-    
+
     // Check if product is already in comparison
     const isAlreadyCompared = products.some((p: Product) => p.id === product.id);
-    
+
     if (isAlreadyCompared) {
       // Remove from comparison
       products = products.filter((p: Product) => p.id !== product.id);
@@ -45,11 +45,11 @@ export function ProductCard({ product, showCompareButton = true }: ProductCardPr
         alert('You can only compare up to 4 products. Remove one to add this product.');
         return;
       }
-      
+
       products.push(product);
       alert('Product added to comparison');
     }
-    
+
     // Save back to localStorage
     localStorage.setItem('comparedProducts', JSON.stringify(products));
   };
@@ -73,21 +73,20 @@ export function ProductCard({ product, showCompareButton = true }: ProductCardPr
             3D
           </div>
         )}
-        
+
         {/* Action buttons */}
         <div className="absolute top-4 left-4 flex flex-col gap-2">
           <button
             onClick={handleWishlistToggle}
-            className={`p-2 rounded-full backdrop-blur-sm transition-colors ${
-              isInWishlistLocal
+            className={`p-2 rounded-full backdrop-blur-sm transition-colors ${isInWishlistLocal
                 ? 'bg-red-500 text-white'
                 : 'bg-white/90 text-gray-900 hover:bg-red-500 hover:text-white'
-            }`}
+              }`}
             aria-label="Add to wishlist"
           >
             <Heart size={16} fill={isInWishlistLocal ? 'currentColor' : 'none'} />
           </button>
-          
+
           {showCompareButton && (
             <button
               onClick={handleCompare}
@@ -108,7 +107,7 @@ export function ProductCard({ product, showCompareButton = true }: ProductCardPr
           {product.description}
         </p>
         <p className="text-xl font-bold text-gray-900">
-          ${product.price.toFixed(2)}
+          ₹{product.price.toFixed(2)}
         </p>
       </div>
     </motion.div>

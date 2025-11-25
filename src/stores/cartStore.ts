@@ -66,7 +66,14 @@ export const useCartStore = create<CartState>((set, get) => ({
           item.color || undefined,
           item.material || undefined
         );
-        set({ items: [...get().items, newItem] });
+        
+        // Ensure newItem has the correct structure
+        if (newItem && typeof newItem === 'object' && 'id' in newItem) {
+          set({ items: [...get().items, newItem] });
+        } else {
+          console.error('Invalid response from addToCart API:', newItem);
+          throw new Error('Failed to add item to cart: Invalid response from server');
+        }
       } catch (error) {
         console.error('Add to cart error:', error);
         // Optionally show error toast/notification here

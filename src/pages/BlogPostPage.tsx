@@ -35,7 +35,7 @@ export function BlogPostPage() {
   const loadBlog = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/blog/${slug}`);
+      const response = await fetch(`/api/blog/${slug}`);
       if (response.ok) {
         const data = await response.json();
         setBlog(data);
@@ -50,7 +50,7 @@ export function BlogPostPage() {
 
   const loadRelatedBlogs = async (category: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/blog?category=${category}&limit=3`);
+      const response = await fetch(`/api/blog?category=${category}&limit=3`);
       if (response.ok) {
         const data = await response.json();
         setRelatedBlogs(data.filter((b: any) => b.slug !== slug));

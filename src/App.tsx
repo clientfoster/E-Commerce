@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Footer } from './components/Layout/Footer';
 import { Cart } from './components/Cart/Cart';
@@ -36,6 +36,7 @@ import { useCartStore } from './stores/cartStore';
 function App() {
   const { user, initialize, loading } = useAuthStore();
   const { fetchCart } = useCartStore();
+  const location = useLocation();
 
   useEffect(() => {
     initialize();
@@ -46,6 +47,11 @@ function App() {
       fetchCart();
     }
   }, [user, fetchCart]);
+
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
 
   if (loading) {
     return (
@@ -93,7 +99,7 @@ function App() {
               <Route path="/compare" element={<ComparePage />} />
               <Route path="/gift-cards" element={<GiftCardsPage />} />
               <Route path="/gift-card/purchase" element={<GiftCardPurchasePage />} />
-              <Route path="/order-tracking" element={<OrderTrackingPage />} />
+              <Route path="/orders/:orderId" element={<OrderTrackingPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
             <Footer />

@@ -341,7 +341,7 @@ export function AdminPage() {
         alert('Category name is required');
         return;
       }
-      
+
       if (editingCategory) {
         // Update existing category
         await adminApi.updateCategory(editingCategory.id, categoryData);
@@ -356,7 +356,7 @@ export function AdminPage() {
     } catch (error: any) {
       console.error('Save category error:', error);
       let errorMessage = `Failed to ${editingCategory ? 'update' : 'create'} category`;
-      
+
       if (error.message) {
         errorMessage += `: ${error.message}`;
       } else if (typeof error === 'string') {
@@ -364,7 +364,7 @@ export function AdminPage() {
       } else {
         errorMessage += '. Please check the console for more details.';
       }
-      
+
       alert(errorMessage);
     }
   };
@@ -372,7 +372,7 @@ export function AdminPage() {
   const loadBlogs = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/admin/blogs');
+      const response = await fetch('/api/admin/blogs');
       if (response.ok) {
         const data = await response.json();
         setBlogs(data);
@@ -436,7 +436,7 @@ export function AdminPage() {
   const handleDeleteBlog = async (blogId: string) => {
     if (!confirm('Delete this blog post?')) return;
     try {
-      await fetch(`http://localhost:5000/api/admin/blogs/${blogId}`, { method: 'DELETE' });
+      await fetch(`/api/admin/blogs/${blogId}`, { method: 'DELETE' });
       loadBlogs();
       loadStats();
     } catch (error) {
@@ -446,7 +446,7 @@ export function AdminPage() {
 
   const handleToggleBlogPublish = async (blogId: string) => {
     try {
-      await fetch(`http://localhost:5000/api/admin/blogs/${blogId}/publish`, { method: 'PUT' });
+      await fetch(`/api/admin/blogs/${blogId}/publish`, { method: 'PUT' });
       loadBlogs();
     } catch (error) {
       alert('Failed to update blog');
@@ -456,7 +456,7 @@ export function AdminPage() {
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!settings) return;
-    
+
     setLoading(true);
     try {
       // Transform settings to match backend schema
@@ -473,7 +473,7 @@ export function AdminPage() {
         currency: settings.currency,
         maintenance: settings.maintenance,
       };
-      
+
       await adminApi.updateSiteSettings(transformedSettings);
       alert('Settings saved successfully!');
       loadSettings();
@@ -586,11 +586,10 @@ export function AdminPage() {
                   onClick={() => setActiveTab(item.id)}
                   whileHover={{ x: 2 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${
-                    isActive
-                      ? 'bg-white text-gray-900 shadow-lg'
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${isActive
+                    ? 'bg-white text-gray-900 shadow-lg'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                    }`}
                 >
                   <Icon className={`w-5 h-5 ${sidebarOpen ? '' : 'mx-auto'}`} />
                   <AnimatePresence>
@@ -818,7 +817,7 @@ export function AdminPage() {
                   <h3 className="text-lg font-bold text-gray-900">Products</h3>
                   <p className="text-sm text-gray-500 mt-1">Manage your product catalog</p>
                 </div>
-                <button 
+                <button
                   onClick={handleCreateProduct}
                   className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
                 >
@@ -897,7 +896,7 @@ export function AdminPage() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-end gap-2">
-                              <button 
+                              <button
                                 onClick={() => handleEditProduct(product)}
                                 className="p-2 text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                               >
@@ -984,13 +983,12 @@ export function AdminPage() {
                             <select
                               value={order.status}
                               onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                              className={`text-xs font-semibold border-0 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${
-                                order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                              className={`text-xs font-semibold border-0 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${order.status === 'delivered' ? 'bg-green-100 text-green-700' :
                                 order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
-                                order.status === 'processing' ? 'bg-yellow-100 text-yellow-700' :
-                                order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                                'bg-gray-100 text-gray-700'
-                              }`}
+                                  order.status === 'processing' ? 'bg-yellow-100 text-yellow-700' :
+                                    order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                      'bg-gray-100 text-gray-700'
+                                }`}
                             >
                               <option value="pending">Pending</option>
                               <option value="processing">Processing</option>
@@ -1083,11 +1081,10 @@ export function AdminPage() {
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
                           <td className="px-6 py-4">
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg ${
-                              user.is_admin 
-                                ? 'bg-purple-100 text-purple-700' 
-                                : 'bg-gray-100 text-gray-600'
-                            }`}>
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg ${user.is_admin
+                              ? 'bg-purple-100 text-purple-700'
+                              : 'bg-gray-100 text-gray-600'
+                              }`}>
                               {user.is_admin ? (
                                 <Shield className="w-3 h-3" />
                               ) : (
@@ -1103,11 +1100,10 @@ export function AdminPage() {
                             <div className="flex items-center justify-end gap-2">
                               <button
                                 onClick={() => handleToggleUserAdmin(user.id, user.is_admin)}
-                                className={`p-2 rounded-lg transition-colors ${
-                                  user.is_admin 
-                                    ? 'text-gray-900 hover:bg-gray-100' 
-                                    : 'text-gray-900 hover:bg-gray-100'
-                                }`}
+                                className={`p-2 rounded-lg transition-colors ${user.is_admin
+                                  ? 'text-gray-900 hover:bg-gray-100'
+                                  : 'text-gray-900 hover:bg-gray-100'
+                                  }`}
                                 title={user.is_admin ? 'Remove admin' : 'Make admin'}
                               >
                                 {user.is_admin ? <ShieldOff className="w-4 h-4" /> : <Shield className="w-4 h-4" />}
@@ -1202,11 +1198,10 @@ export function AdminPage() {
                           <td className="px-6 py-4">
                             <button
                               onClick={() => handleToggleBlogPublish(blog.id)}
-                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-                                blog.is_published
-                                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                              }`}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${blog.is_published
+                                ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
                             >
                               <Circle className="w-2 h-2 fill-current" />
                               {blog.is_published ? 'Published' : 'Draft'}
@@ -1351,7 +1346,7 @@ export function AdminPage() {
             <div className="space-y-6">
               <div className="bg-white rounded-2xl border border-gray-200 p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Site Settings</h2>
-                
+
                 {loading ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
@@ -1410,9 +1405,9 @@ export function AdminPage() {
                           <input
                             type="text"
                             value={settings.address.street}
-                            onChange={(e) => setSettings({ 
-                              ...settings, 
-                              address: { ...settings.address, street: e.target.value } 
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              address: { ...settings.address, street: e.target.value }
                             })}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           />
@@ -1422,9 +1417,9 @@ export function AdminPage() {
                           <input
                             type="text"
                             value={settings.address.city}
-                            onChange={(e) => setSettings({ 
-                              ...settings, 
-                              address: { ...settings.address, city: e.target.value } 
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              address: { ...settings.address, city: e.target.value }
                             })}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           />
@@ -1434,9 +1429,9 @@ export function AdminPage() {
                           <input
                             type="text"
                             value={settings.address.state}
-                            onChange={(e) => setSettings({ 
-                              ...settings, 
-                              address: { ...settings.address, state: e.target.value } 
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              address: { ...settings.address, state: e.target.value }
                             })}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           />
@@ -1446,9 +1441,9 @@ export function AdminPage() {
                           <input
                             type="text"
                             value={settings.address.zipCode}
-                            onChange={(e) => setSettings({ 
-                              ...settings, 
-                              address: { ...settings.address, zipCode: e.target.value } 
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              address: { ...settings.address, zipCode: e.target.value }
                             })}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           />
@@ -1458,9 +1453,9 @@ export function AdminPage() {
                           <input
                             type="text"
                             value={settings.address.country}
-                            onChange={(e) => setSettings({ 
-                              ...settings, 
-                              address: { ...settings.address, country: e.target.value } 
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              address: { ...settings.address, country: e.target.value }
                             })}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           />
@@ -1477,9 +1472,9 @@ export function AdminPage() {
                           <input
                             type="url"
                             value={settings.social_media.facebook || ''}
-                            onChange={(e) => setSettings({ 
-                              ...settings, 
-                              social_media: { ...settings.social_media, facebook: e.target.value } 
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              social_media: { ...settings.social_media, facebook: e.target.value }
                             })}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           />
@@ -1489,9 +1484,9 @@ export function AdminPage() {
                           <input
                             type="url"
                             value={settings.social_media.instagram || ''}
-                            onChange={(e) => setSettings({ 
-                              ...settings, 
-                              social_media: { ...settings.social_media, instagram: e.target.value } 
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              social_media: { ...settings.social_media, instagram: e.target.value }
                             })}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           />
@@ -1501,9 +1496,9 @@ export function AdminPage() {
                           <input
                             type="url"
                             value={settings.social_media.twitter || ''}
-                            onChange={(e) => setSettings({ 
-                              ...settings, 
-                              social_media: { ...settings.social_media, twitter: e.target.value } 
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              social_media: { ...settings.social_media, twitter: e.target.value }
                             })}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           />
@@ -1513,9 +1508,9 @@ export function AdminPage() {
                           <input
                             type="url"
                             value={settings.social_media.youtube || ''}
-                            onChange={(e) => setSettings({ 
-                              ...settings, 
-                              social_media: { ...settings.social_media, youtube: e.target.value } 
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              social_media: { ...settings.social_media, youtube: e.target.value }
                             })}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           />
@@ -1532,9 +1527,9 @@ export function AdminPage() {
                           <input
                             type="number"
                             value={settings.shipping.freeShippingThreshold}
-                            onChange={(e) => setSettings({ 
-                              ...settings, 
-                              shipping: { ...settings.shipping, freeShippingThreshold: parseFloat(e.target.value) || 0 } 
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              shipping: { ...settings.shipping, freeShippingThreshold: parseFloat(e.target.value) || 0 }
                             })}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           />
@@ -1544,9 +1539,9 @@ export function AdminPage() {
                           <input
                             type="number"
                             value={settings.shipping.standardShippingCost}
-                            onChange={(e) => setSettings({ 
-                              ...settings, 
-                              shipping: { ...settings.shipping, standardShippingCost: parseFloat(e.target.value) || 0 } 
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              shipping: { ...settings.shipping, standardShippingCost: parseFloat(e.target.value) || 0 }
                             })}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           />
@@ -1556,9 +1551,9 @@ export function AdminPage() {
                           <input
                             type="number"
                             value={settings.shipping.expressShippingCost}
-                            onChange={(e) => setSettings({ 
-                              ...settings, 
-                              shipping: { ...settings.shipping, expressShippingCost: parseFloat(e.target.value) || 0 } 
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              shipping: { ...settings.shipping, expressShippingCost: parseFloat(e.target.value) || 0 }
                             })}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           />
@@ -1568,9 +1563,9 @@ export function AdminPage() {
                           <input
                             type="number"
                             value={settings.shipping.internationalShippingCost}
-                            onChange={(e) => setSettings({ 
-                              ...settings, 
-                              shipping: { ...settings.shipping, internationalShippingCost: parseFloat(e.target.value) || 0 } 
+                            onChange={(e) => setSettings({
+                              ...settings,
+                              shipping: { ...settings.shipping, internationalShippingCost: parseFloat(e.target.value) || 0 }
                             })}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           />
@@ -1589,18 +1584,16 @@ export function AdminPage() {
                           </div>
                           <button
                             type="button"
-                            onClick={() => setSettings({ 
-                              ...settings, 
-                              maintenance: { ...settings.maintenance, enabled: !settings.maintenance.enabled } 
+                            onClick={() => setSettings({
+                              ...settings,
+                              maintenance: { ...settings.maintenance, enabled: !settings.maintenance.enabled }
                             })}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                              settings.maintenance.enabled ? 'bg-gray-900' : 'bg-gray-300'
-                            }`}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${settings.maintenance.enabled ? 'bg-gray-900' : 'bg-gray-300'
+                              }`}
                           >
                             <span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                settings.maintenance.enabled ? 'translate-x-6' : 'translate-x-1'
-                              }`}
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.maintenance.enabled ? 'translate-x-6' : 'translate-x-1'
+                                }`}
                             />
                           </button>
                         </div>
@@ -1609,9 +1602,9 @@ export function AdminPage() {
                             <label className="block text-sm font-medium text-gray-700 mb-2">Maintenance Message</label>
                             <textarea
                               value={settings.maintenance.message}
-                              onChange={(e) => setSettings({ 
-                                ...settings, 
-                                maintenance: { ...settings.maintenance, message: e.target.value } 
+                              onChange={(e) => setSettings({
+                                ...settings,
+                                maintenance: { ...settings.maintenance, message: e.target.value }
                               })}
                               rows={3}
                               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
@@ -1647,7 +1640,7 @@ export function AdminPage() {
                   <h2 className="text-xl font-bold text-gray-900">Product Categories</h2>
                   <p className="text-sm text-gray-500 mt-1">Manage product categories and organize your inventory</p>
                 </div>
-                <button 
+                <button
                   onClick={() => handleCreateCategory()}
                   className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium flex items-center gap-2"
                 >
@@ -1655,7 +1648,7 @@ export function AdminPage() {
                   Add Category
                 </button>
               </div>
-              
+
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
@@ -1683,9 +1676,9 @@ export function AdminPage() {
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                               {category.image_url ? (
-                                <img 
-                                  src={category.image_url} 
-                                  alt={category.name} 
+                                <img
+                                  src={category.image_url}
+                                  alt={category.name}
                                   className="w-10 h-10 rounded-lg object-cover"
                                 />
                               ) : (
@@ -1732,7 +1725,7 @@ export function AdminPage() {
                           <div className="flex flex-col items-center gap-3">
                             <Tag className="w-12 h-12 text-gray-300" />
                             <p className="text-gray-500">No categories found</p>
-                            <button 
+                            <button
                               onClick={() => handleCreateCategory()}
                               className="mt-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
                             >
@@ -1755,7 +1748,7 @@ export function AdminPage() {
                 <h2 className="text-xl font-bold text-gray-900">Customer Reviews</h2>
                 <p className="text-sm text-gray-500 mt-1">Manage and moderate customer reviews</p>
               </div>
-              
+
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
@@ -1804,11 +1797,10 @@ export function AdminPage() {
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
-                                  className={`w-4 h-4 ${
-                                    i < review.rating
-                                      ? 'fill-yellow-400 text-yellow-400'
-                                      : 'fill-gray-200 text-gray-200'
-                                  }`}
+                                  className={`w-4 h-4 ${i < review.rating
+                                    ? 'fill-yellow-400 text-yellow-400'
+                                    : 'fill-gray-200 text-gray-200'
+                                    }`}
                                 />
                               ))}
                               <span className="text-xs text-gray-600 ml-1">{review.rating}</span>
@@ -1855,14 +1847,14 @@ export function AdminPage() {
           )}
         </main>
       </div>
-      <ProductModal 
+      <ProductModal
         isOpen={showProductModal}
         onClose={() => setShowProductModal(false)}
         product={editingProduct}
         onSave={handleSaveProduct}
         categories={categories}
       />
-      <CategoryModal 
+      <CategoryModal
         isOpen={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
         category={editingCategory}
@@ -1886,17 +1878,17 @@ interface ProductFormData {
   isActive: boolean;
 }
 
-function ProductModal({ 
-  isOpen, 
-  onClose, 
-  product, 
+function ProductModal({
+  isOpen,
+  onClose,
+  product,
   onSave,
   categories
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  product: Product | null; 
-  onSave: (data: any) => void; 
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  product: Product | null;
+  onSave: (data: any) => void;
   categories: Category[];
 }) {
   const [formData, setFormData] = useState<ProductFormData>({
@@ -1955,14 +1947,14 @@ function ProductModal({
           <h2 className="text-xl font-bold text-gray-900">
             {product ? 'Edit Product' : 'Add New Product'}
           </h2>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -1975,7 +1967,7 @@ function ProductModal({
                 required
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Price ($)</label>
               <input
@@ -1987,7 +1979,7 @@ function ProductModal({
                 required
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Stock Quantity</label>
               <input
@@ -1998,7 +1990,7 @@ function ProductModal({
                 required
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
               <select
@@ -2014,7 +2006,7 @@ function ProductModal({
                 ))}
               </select>
             </div>
-            
+
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
               <textarea
@@ -2024,11 +2016,11 @@ function ProductModal({
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               />
             </div>
-            
+
             <div className="md:col-span-2">
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-gray-700">Images</label>
-                <button 
+                <button
                   type="button"
                   onClick={addImage}
                   className="text-sm text-gray-900 hover:text-gray-600 font-medium"
@@ -2036,7 +2028,7 @@ function ProductModal({
                   + Add Image
                 </button>
               </div>
-              
+
               <div className="space-y-3">
                 {formData.images.map((image, index) => (
                   <div key={index} className="flex gap-2">
@@ -2048,7 +2040,7 @@ function ProductModal({
                       className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                     />
                     {formData.images.length > 1 && (
-                      <button 
+                      <button
                         type="button"
                         onClick={() => removeImage(index)}
                         className="px-3 py-2.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
@@ -2061,7 +2053,7 @@ function ProductModal({
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-6 pt-4">
             <label className="flex items-center gap-2">
               <input
@@ -2072,7 +2064,7 @@ function ProductModal({
               />
               <span className="text-sm font-medium text-gray-700">Featured Product</span>
             </label>
-            
+
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -2083,7 +2075,7 @@ function ProductModal({
               <span className="text-sm font-medium text-gray-700">Active</span>
             </label>
           </div>
-          
+
           <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
             <button
               type="button"
@@ -2112,16 +2104,16 @@ interface CategoryFormData {
   image_url: string;
 }
 
-function CategoryModal({ 
-  isOpen, 
-  onClose, 
-  category, 
-  onSave 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  category: Category | null; 
-  onSave: (data: any) => void; 
+function CategoryModal({
+  isOpen,
+  onClose,
+  category,
+  onSave
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  category: Category | null;
+  onSave: (data: any) => void;
 }) {
   const [formData, setFormData] = useState<CategoryFormData>({
     name: category?.name || '',
@@ -2132,37 +2124,37 @@ function CategoryModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate required fields
     if (!formData.name.trim()) {
       alert('Category name is required');
       return;
     }
-    
+
     // Generate slug if not provided
     let slug = formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    
+
     // Ensure slug is not empty
     if (!slug) {
       alert('Could not generate a valid slug. Please provide a category name with alphanumeric characters.');
       return;
     }
-    
+
     // Remove leading/trailing hyphens
     slug = slug.replace(/^-+|-+$/g, '');
-    
+
     // Ensure slug is not empty after cleaning
     if (!slug) {
       alert('Could not generate a valid slug. Please provide a category name with alphanumeric characters.');
       return;
     }
-    
+
     // Ensure slug meets minimum length requirement
     if (slug.length < 2) {
       alert('Slug must be at least 2 characters long.');
       return;
     }
-    
+
     onSave({
       ...formData,
       slug,
@@ -2178,14 +2170,14 @@ function CategoryModal({
           <h2 className="text-xl font-bold text-gray-900">
             {category ? 'Edit Category' : 'Add New Category'}
           </h2>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -2198,7 +2190,7 @@ function CategoryModal({
                 required
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Slug</label>
               <input
@@ -2209,7 +2201,7 @@ function CategoryModal({
                 placeholder="auto-generated if empty"
               />
             </div>
-            
+
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
               <textarea
@@ -2219,7 +2211,7 @@ function CategoryModal({
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               />
             </div>
-            
+
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
               <input
@@ -2231,7 +2223,7 @@ function CategoryModal({
               />
             </div>
           </div>
-          
+
           <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
             <button
               type="button"
