@@ -9,6 +9,13 @@ import cartRoutes from './routes/cart.js';
 import ordersRoutes from './routes/orders.js';
 import adminRoutes from './routes/admin.js';
 import blogRoutes from './routes/blog.js';
+import wishlistRoutes from './routes/wishlist.js';
+import couponRoutes from './routes/coupons.js';
+import giftcardRoutes from './routes/giftcards.js';
+import newsletterRoutes from './routes/newsletter.js';
+import reviewRoutes from './routes/reviews.js';
+import searchRoutes from './routes/search.js';
+import paymentRoutes from './routes/payments.js';
 
 dotenv.config();
 
@@ -38,6 +45,13 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/blog', blogRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/giftcards', giftcardRoutes);
+app.use('/api/newsletter', newsletterRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/payments', paymentRoutes);
 
 console.log('✅ All routes registered:', [
   '/api/auth',
@@ -47,6 +61,13 @@ console.log('✅ All routes registered:', [
   '/api/orders',
   '/api/admin (includes /setup)',
   '/api/blog',
+  '/api/wishlist',
+  '/api/coupons',
+  '/api/giftcards',
+  '/api/newsletter',
+  '/api/reviews',
+  '/api/search',
+  '/api/payments',
 ]);
 
 // Health check

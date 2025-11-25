@@ -1,15 +1,13 @@
 import { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, useGLTF, Environment, ContactShadows } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Environment, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface Model3DProps {
-  modelUrl?: string;
   color?: string;
-  material?: string;
 }
 
-function Model3D({ modelUrl, color = '#1a1a1a' }: Model3DProps) {
+function Model3D({ color = '#1a1a1a' }: Model3DProps) {
   const meshRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
@@ -31,15 +29,11 @@ function Model3D({ modelUrl, color = '#1a1a1a' }: Model3DProps) {
 }
 
 interface ProductViewer3DProps {
-  modelUrl?: string;
   selectedColor?: string;
-  selectedMaterial?: string;
 }
 
 export function ProductViewer3D({
-  modelUrl,
   selectedColor,
-  selectedMaterial,
 }: ProductViewer3DProps) {
   return (
     <div className="w-full h-full min-h-[500px] bg-gradient-to-b from-gray-100 to-white rounded-lg overflow-hidden">
@@ -57,9 +51,7 @@ export function ProductViewer3D({
         <pointLight position={[-10, -10, -5]} intensity={0.3} />
 
         <Model3D
-          modelUrl={modelUrl}
           color={selectedColor}
-          material={selectedMaterial}
         />
 
         <ContactShadows

@@ -11,9 +11,9 @@ export function GiftCardsPage() {
 
   useEffect(() => {
     if (user) {
-      getUserGiftCards(user.id);
+      getUserGiftCards(); // Uses token, no userId needed
     }
-  }, [user, getUserGiftCards]);
+  }, [user]);
 
   const handleCopyCode = (code: string, cardId: any) => {
     navigator.clipboard.writeText(code);
@@ -86,7 +86,7 @@ export function GiftCardsPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-semibold text-gray-900">
-                          ${card.amount.toFixed(2)} Gift Card
+                          ${card.initialAmount.toFixed(2)} Gift Card
                         </h3>
                         {card.isRedeemed && (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -100,10 +100,10 @@ export function GiftCardsPage() {
                           <span className="font-medium">Code:</span> {card.code}
                         </div>
                         <div>
-                          <span className="font-medium">Balance:</span> ${card.balance.toFixed(2)}
+                          <span className="font-medium">Balance:</span> ${card.currentBalance.toFixed(2)}
                         </div>
                         <div>
-                          <span className="font-medium">Expires:</span> {formatDate(card.expiresAt)}
+                          <span className="font-medium">Expires:</span> {card.expiresAt ? formatDate(card.expiresAt) : 'N/A'}
                         </div>
                         {card.recipientEmail && (
                           <div>
@@ -120,7 +120,7 @@ export function GiftCardsPage() {
                     </div>
                     
                     <div className="flex flex-col sm:flex-row gap-2">
-                      {!card.isRedeemed && card.balance > 0 && (
+                      {!card.isRedeemed && card.currentBalance > 0 && (
                         <button
                           onClick={() => handleCopyCode(card.code, card._id)}
                           className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"

@@ -19,11 +19,11 @@ export interface CartItem {
 interface CartState {
   items: CartItem[];
   loading: boolean;
-  fetchCart: (userId: string) => Promise<void>;
-  addItem: (userId: string, item: Omit<CartItem, 'id'>) => Promise<void>;
+  fetchCart: () => Promise<void>;
+  addItem: (item: Omit<CartItem, 'id'>) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
-  clearCart: (userId: string) => Promise<void>;
+  clearCart: () => Promise<void>;
   getTotalItems: () => number;
   getTotalPrice: () => number;
 }
@@ -32,18 +32,21 @@ export const useCartStore = create<CartState>((set, get) => ({
   items: [],
   loading: false,
 
-  fetchCart: async (userId: string) => {
+  fetchCart: async () => {
     set({ loading: true });
     try {
-      const items = await cartApi.getCart(userId);
-      set({ items, loading: false });
+      const items = await cartApi.getCart();
+      set({ items: Array.isArray(items) ? items : [], loading: false });
     } catch (error) {
       console.error('Fetch cart error:', error);
+      // Keep existing items on error to maintain UI state
       set({ loading: false });
+      // Optionally show error toast/notification here
+      throw error;
     }
   },
 
-  addItem: async (userId: string, item: Omit<CartItem, 'id'>) => {
+  addItem: async (item: Omit<CartItem, 'id'>) => {
     const existing = get().items.find(
       (i) =>
         i.product_id === item.product_id &&
@@ -57,7 +60,6 @@ export const useCartStore = create<CartState>((set, get) => ({
     } else {
       try {
         const newItem = await cartApi.addToCart(
-          userId,
           item.product_id,
           item.quantity,
           item.size || undefined,
@@ -67,6 +69,8 @@ export const useCartStore = create<CartState>((set, get) => ({
         set({ items: [...get().items, newItem] });
       } catch (error) {
         console.error('Add to cart error:', error);
+        // Optionally show error toast/notification here
+        throw error;
       }
     }
   },
@@ -77,33 +81,60 @@ export const useCartStore = create<CartState>((set, get) => ({
       return;
     }
 
+    const currentItems = get().items;
+    
     try {
-      await cartApi.updateQuantity(itemId, quantity);
+      // Optimistic update
       set({
-        items: get().items.map((item) =>
+        items: currentItems.map((item) =>
           item.id === itemId ? { ...item, quantity } : item
         ),
       });
+      
+      await cartApi.updateQuantity(itemId, quantity);
     } catch (error) {
       console.error('Update quantity error:', error);
+      // Revert optimistic update on error
+      set({ items: currentItems });
+      // Optionally show error toast/notification here
+      throw error;
     }
   },
 
   removeItem: async (itemId: string) => {
+    const currentItems = get().items;
+    const itemToRemove = currentItems.find(item => item.id === itemId);
+    
     try {
+      // Optimistic update
+      set({ items: currentItems.filter((item) => item.id !== itemId) });
+      
       await cartApi.removeFromCart(itemId);
-      set({ items: get().items.filter((item) => item.id !== itemId) });
     } catch (error) {
       console.error('Remove item error:', error);
+      // Revert optimistic update on error
+      if (itemToRemove) {
+        set({ items: currentItems });
+      }
+      // Optionally show error toast/notification here
+      throw error;
     }
   },
 
-  clearCart: async (userId: string) => {
+  clearCart: async () => {
+    const currentItems = get().items;
+    
     try {
-      await cartApi.clearCart(userId);
+      // Optimistic update
       set({ items: [] });
+      
+      await cartApi.clearCart();
     } catch (error) {
       console.error('Clear cart error:', error);
+      // Revert optimistic update on error
+      set({ items: currentItems });
+      // Optionally show error toast/notification here
+      throw error;
     }
   },
 

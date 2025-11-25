@@ -3,8 +3,6 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Filter, Gift } from 'lucide-react';
 import { productApi, categoryApi } from '../lib/api';
-import { ProductFilter } from '../components/Products/ProductFilter';
-import { ProductSorting } from '../components/Products/ProductSorting';
 import { ProductCard } from '../components/Products/ProductCard';
 import type { Product, Category } from '../types';
 
@@ -14,19 +12,9 @@ export function ShopPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
-  const [filters, setFilters] = useState({
-    minPrice: undefined as number | undefined,
-    maxPrice: undefined as number | undefined,
-    sizes: [] as string[],
-    colors: [] as string[],
-    materials: [] as string[],
-  });
-  const [sortBy, setSortBy] = useState('name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
   const loaderRef = useRef<HTMLDivElement>(null);
 
   const loadProducts = useCallback(async (pageNum: number) => {
@@ -46,13 +34,12 @@ export function ShopPage() {
         } else {
           setProducts(prev => [...prev, ...(data.products as Product[])]);
         }
-        setTotalProducts(data.total);
         setHasMore(data.page < data.pages);
       }
     } catch (error) {
       console.error('Fetch products error:', error);
     }
-  }, [selectedCategory, filters, sortBy, sortOrder]);
+  }, [selectedCategory]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -101,44 +88,11 @@ export function ShopPage() {
 
   const filteredProducts = products
     .filter((p) => {
-      // Price filter
-      if (filters.minPrice !== undefined && p.price < filters.minPrice) return false;
-      if (filters.maxPrice !== undefined && p.price > filters.maxPrice) return false;
-      
-      // Size filter
-      if (filters.sizes.length > 0 && !p.sizes.some(size => filters.sizes.includes(size))) return false;
-      
-      // Color filter
-      if (filters.colors.length > 0 && !p.colors.some(color => filters.colors.includes(color.name))) return false;
-      
-      // Material filter
-      if (filters.materials.length > 0 && !p.materials.some(material => filters.materials.includes(material.name))) return false;
-      
       // Original price range filter
       return p.price >= priceRange[0] && p.price <= priceRange[1];
     })
     .sort((a, b) => {
-      let result = 0;
-      
-      switch (sortBy) {
-        case 'name':
-          result = a.name.localeCompare(b.name);
-          break;
-        case 'price':
-          result = a.price - b.price;
-          break;
-        case 'createdAt':
-          result = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-          break;
-        case 'rating':
-          // In a real implementation, we would have rating data
-          result = 0;
-          break;
-        default:
-          result = 0;
-      }
-      
-      return sortOrder === 'desc' ? -result : result;
+      return a.name.localeCompare(b.name);
     });
 
   return (

@@ -38,7 +38,7 @@ const ComparePage: React.FC = () => {
       return;
     }
     
-    addItem(user.id, {
+    addItem({
       product_id: product.id,
       quantity: 1,
       size: product.sizes?.[0] || null,

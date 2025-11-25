@@ -18,29 +18,24 @@ export const useAuthStore = create<AuthState>((set) => ({
   loading: true,
   token: null,
 
-  initialize: () => {
+  initialize: async () => {
     const token = localStorage.getItem('auth_token');
     
     if (token) {
-      const userId = authApi.verifyToken(token);
-      if (userId) {
-        authApi.getProfile(userId).then((profile) => {
-          if (profile) {
-            set({ 
-              user: { id: profile.id, email: profile.email }, 
-              profile, 
-              token,
-              loading: false 
-            });
-          } else {
-            localStorage.removeItem('auth_token');
-            set({ loading: false });
-          }
-        }).catch(() => {
+      try {
+        const profile = await authApi.getProfile();
+        if (profile) {
+          set({ 
+            user: { id: profile.id, email: profile.email }, 
+            profile, 
+            token,
+            loading: false 
+          });
+        } else {
           localStorage.removeItem('auth_token');
           set({ loading: false });
-        });
-      } else {
+        }
+      } catch (error) {
         localStorage.removeItem('auth_token');
         set({ loading: false });
       }

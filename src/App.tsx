@@ -43,7 +43,7 @@ function App() {
 
   useEffect(() => {
     if (user) {
-      fetchCart(user.id);
+      fetchCart();
     }
   }, [user, fetchCart]);
 

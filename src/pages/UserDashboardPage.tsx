@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
-  Package,
   ShoppingCart,
   Heart,
   Gift,
@@ -14,13 +13,13 @@ import {
   Eye,
   ChevronRight,
   Package2,
-  CreditCard,
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useCartStore } from '../stores/cartStore';
 import { useWishlistStore } from '../stores/wishlistStore';
 import { useGiftCardStore } from '../stores/giftcardStore';
-import { orderApi } from '../lib/api';
+import { orderApi, cartApi } from '../lib/api';
+import { wishlistApi } from '../lib/api/newApis';
 import type { Product } from '../types';
 
 interface Order {
@@ -41,8 +40,8 @@ interface Order {
 interface GiftCard {
   _id: any;
   code: string;
-  amount: number;
-  balance: number;
+  initialAmount: number;
+  currentBalance: number;
   expiresAt: Date;
   isRedeemed: boolean;
 }
@@ -58,7 +57,7 @@ export function UserDashboardPage() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [wishlistProducts, setWishlistProducts] = useState<Product[]>([]);
+  const [wishlistProducts, setWishlistProducts] = useState<Array<Product & { wishlistItemId: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [copiedCardId, setCopiedCardId] = useState<string | null>(null);
 
@@ -81,11 +80,11 @@ export function UserDashboardPage() {
     setLoading(true);
     try {
       // Load orders
-      const ordersData = await orderApi.getOrders(user!.id);
+      const ordersData = await orderApi.getOrders();
       if (ordersData) setOrders(ordersData as Order[]);
       
-      // Load gift cards
-      getUserGiftCards(user!.id);
+      // Load gift cards (uses token, no userId needed)
+      getUserGiftCards();
     } catch (error) {
       console.error('Load dashboard data error:', error);
     }
@@ -95,7 +94,7 @@ export function UserDashboardPage() {
   const loadOrders = async () => {
     setLoading(true);
     try {
-      const data = await orderApi.getOrders(user!.id);
+      const data = await orderApi.getOrders();
       if (data) setOrders(data as Order[]);
     } catch (error) {
       console.error('Load orders error:', error);
@@ -104,21 +103,68 @@ export function UserDashboardPage() {
   };
 
   const loadWishlistProducts = async () => {
+    if (!user) return;
+    
     setLoading(true);
     try {
-      // This would typically fetch wishlist products from the backend
-      // For now, we'll just use the wishlist store
-      setWishlistProducts([]); // Placeholder
+      const wishlistItems = await wishlistApi.getWishlist();
+      
+      // Transform wishlist items to Product format for display, keeping wishlist item ID
+      const products = wishlistItems.map((item: any) => ({
+        id: item.product_id,
+        name: item.product.name,
+        slug: item.product.slug,
+        description: null,
+        price: item.product.price,
+        category_id: null,
+        images: item.product.images || [],
+        model_url: null,
+        sizes: [],
+        colors: [],
+        materials: [],
+        stock_quantity: item.product.stock_quantity || 0,
+        is_featured: false,
+        is_active: true,
+        created_at: item.created_at,
+        updated_at: item.created_at,
+        wishlistItemId: item.id, // Store the wishlist item ID for removal
+      }));
+      
+      setWishlistProducts(products);
     } catch (error) {
       console.error('Load wishlist products error:', error);
+      setWishlistProducts([]);
     }
     setLoading(false);
+  };
+
+  const handleRemoveFromWishlist = async (itemId: string, productId: string) => {
+    try {
+      await wishlistApi.removeFromWishlist(itemId);
+      // Update local state immediately for better UX
+      setWishlistProducts(prev => prev.filter(p => p.wishlistItemId !== itemId));
+      // Optionally reload to ensure sync
+      await loadWishlistProducts();
+    } catch (error) {
+      console.error('Remove from wishlist error:', error);
+      alert('Failed to remove item from wishlist. Please try again.');
+    }
+  };
+
+  const handleAddToCartFromWishlist = async (product: Product) => {
+    try {
+      await cartApi.addToCart(product.id, 1);
+      alert(`${product.name} added to cart!`);
+    } catch (error) {
+      console.error('Add to cart error:', error);
+      alert('Failed to add item to cart. Please try again.');
+    }
   };
 
   const loadGiftCards = async () => {
     setLoading(true);
     try {
-      getUserGiftCards(user!.id);
+      getUserGiftCards();
     } catch (error) {
       console.error('Load gift cards error:', error);
     }
@@ -288,15 +334,15 @@ export function UserDashboardPage() {
           <h2 className="text-lg font-semibold text-gray-900">Your Gift Cards</h2>
         </div>
         <div className="divide-y divide-gray-200">
-          {giftCards.slice(0, 2).map((card: GiftCard) => (
+          {giftCards.slice(0, 2).map((card) => (
             <div key={card._id.toString()} className="p-6 hover:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-medium text-gray-900">${card.amount.toFixed(2)} Gift Card</h3>
-                  <p className="text-sm text-gray-500">Balance: ${card.balance.toFixed(2)}</p>
+                  <h3 className="font-medium text-gray-900">${card.initialAmount.toFixed(2)} Gift Card</h3>
+                  <p className="text-sm text-gray-500">Balance: ${card.currentBalance.toFixed(2)}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {!card.isRedeemed && card.balance > 0 && (
+                  {!card.isRedeemed && card.currentBalance > 0 && (
                     <button
                       onClick={() => handleCopyCode(card.code, card._id)}
                       className="px-3 py-1 text-sm bg-gray-900 text-white rounded hover:bg-gray-800"
@@ -407,18 +453,88 @@ export function UserDashboardPage() {
 
   const renderWishlist = () => (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Wishlist</h2>
-      <div className="bg-white rounded-lg p-8 text-center">
-        <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Wishlist functionality coming soon</h3>
-        <p className="text-gray-600 mb-6">Manage your wishlist from the main wishlist page</p>
-        <button
-          onClick={() => navigate('/wishlist')}
-          className="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
-        >
-          View Wishlist
-        </button>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Your Wishlist</h2>
+        {wishlistProducts.length > 0 && (
+          <button
+            onClick={() => navigate('/wishlist')}
+            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+          >
+            View Full Wishlist
+          </button>
+        )}
       </div>
+      
+      {loading ? (
+        <div className="bg-white rounded-lg shadow-sm p-8">
+          <div className="animate-pulse space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
+                <div className="w-20 h-20 bg-gray-200 rounded"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div className="h-8 bg-gray-200 rounded w-24"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : wishlistProducts.length === 0 ? (
+        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+          <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Your wishlist is empty</h3>
+          <p className="text-gray-600 mb-6">Start adding items to your wishlist to save them for later</p>
+          <button
+            onClick={() => navigate('/shop')}
+            className="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+          >
+            Continue Shopping
+          </button>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="divide-y divide-gray-200">
+            {wishlistProducts.map((product) => (
+              <div key={product.id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <img
+                    src={product.images[0] || 'https://via.placeholder.com/150'}
+                    alt={product.name}
+                    className="w-24 h-24 object-cover rounded-lg cursor-pointer"
+                    onClick={() => navigate(`/product/${product.slug}`)}
+                  />
+                  
+                  <div className="flex-1">
+                    <h3
+                      className="text-lg font-semibold text-gray-900 mb-1 cursor-pointer hover:text-gray-700"
+                      onClick={() => navigate(`/product/${product.slug}`)}
+                    >
+                      {product.name}
+                    </h3>
+                    <p className="text-xl font-bold text-gray-900 mb-3">${product.price.toFixed(2)}</p>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => handleAddToCartFromWishlist(product)}
+                        className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+                      >
+                        Add to Cart
+                      </button>
+                      <button
+                        onClick={() => handleRemoveFromWishlist(product.wishlistItemId, product.id)}
+                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -456,13 +572,13 @@ export function UserDashboardPage() {
       ) : (
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="divide-y divide-gray-200">
-            {giftCards.map((card: GiftCard) => (
+            {giftCards.map((card) => (
               <div key={card._id.toString()} className="p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        ${card.amount.toFixed(2)} Gift Card
+                        ${card.initialAmount.toFixed(2)} Gift Card
                       </h3>
                       {card.isRedeemed && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -476,16 +592,16 @@ export function UserDashboardPage() {
                         <span className="font-medium">Code:</span> {card.code}
                       </div>
                       <div>
-                        <span className="font-medium">Balance:</span> ${card.balance.toFixed(2)}
+                        <span className="font-medium">Balance:</span> ${card.currentBalance.toFixed(2)}
                       </div>
                       <div>
-                        <span className="font-medium">Expires:</span> {new Date(card.expiresAt).toLocaleDateString()}
+                        <span className="font-medium">Expires:</span> {card.expiresAt ? new Date(card.expiresAt).toLocaleDateString() : 'N/A'}
                       </div>
                     </div>
                   </div>
                   
                   <div className="flex flex-col sm:flex-row gap-2">
-                    {!card.isRedeemed && card.balance > 0 && (
+                    {!card.isRedeemed && card.currentBalance > 0 && (
                       <button
                         onClick={() => handleCopyCode(card.code, card._id)}
                         className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"

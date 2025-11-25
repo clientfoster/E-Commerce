@@ -329,10 +329,10 @@ async function seedDatabase() {
     ]);
     console.log('Created products');
 
-    // Create admin user (plain text password for demo)
+    // Create admin user (password will be hashed automatically by User model)
     await User.create({
       email: 'admin@atelier.com',
-      password: 'admin123', // Plain text for demo
+      password: 'admin123', // Will be hashed by pre-save middleware
       fullName: 'Admin User',
       isAdmin: true,
     });

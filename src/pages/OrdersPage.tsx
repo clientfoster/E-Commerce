@@ -35,7 +35,7 @@ export function OrdersPage() {
 
     setLoading(true);
     try {
-      const data = await orderApi.getOrders(user.id);
+      const data = await orderApi.getOrders();
       if (data) setOrders(data as Order[]);
     } catch (error) {
       console.error('Fetch orders error:', error);

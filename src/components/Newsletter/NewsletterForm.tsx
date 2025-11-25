@@ -32,7 +32,8 @@ export function NewsletterForm() {
       
       setIsSubscribed(true);
       setEmail('');
-    } catch (err) {
+    } catch (error) {
+      console.error('Failed to subscribe:', error);
       setError('Failed to subscribe. Please try again.');
     } finally {
       setIsLoading(false);

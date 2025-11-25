@@ -101,7 +101,7 @@ export function ProductPage() {
 
     if (!product) return;
 
-    await addItem(user.id, {
+    await addItem({
       product_id: product.id,
       quantity: 1,
       size: selectedSize,
@@ -250,9 +250,7 @@ export function ProductPage() {
                   className="aspect-square"
                 >
                   <ProductViewer3D
-                    modelUrl={product.model_url}
                     selectedColor={selectedColor?.hex}
-                    selectedMaterial={selectedMaterial || undefined}
                   />
                 </motion.div>
               ) : (

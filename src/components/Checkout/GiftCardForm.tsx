@@ -36,7 +36,7 @@ export function GiftCardForm({ onApply, totalAmount }: GiftCardFormProps) {
       }
       
       // Make sure amount doesn't exceed gift card balance or total amount
-      const maxAmount = Math.min(activeGiftCard.balance, totalAmount);
+      const maxAmount = Math.min(activeGiftCard.currentBalance, totalAmount);
       const finalAmount = Math.min(amount, maxAmount);
       
       onApply(finalAmount);
@@ -89,7 +89,7 @@ export function GiftCardForm({ onApply, totalAmount }: GiftCardFormProps) {
               <div>
                 <p className="text-sm font-medium text-green-800">Valid Gift Card</p>
                 <p className="text-sm text-green-700 mt-1">
-                  Balance: ${activeGiftCard.balance.toFixed(2)}
+                  Balance: ${activeGiftCard.currentBalance.toFixed(2)}
                 </p>
                 {activeGiftCard.expiresAt && (
                   <p className="text-xs text-green-600 mt-1">
@@ -117,7 +117,7 @@ export function GiftCardForm({ onApply, totalAmount }: GiftCardFormProps) {
                   value={amountToUse}
                   onChange={(e) => setAmountToUse(e.target.value)}
                   min="0.01"
-                  max={Math.min(activeGiftCard.balance, totalAmount)}
+                  max={Math.min(activeGiftCard.currentBalance, totalAmount)}
                   step="0.01"
                   placeholder="0.00"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
@@ -131,7 +131,7 @@ export function GiftCardForm({ onApply, totalAmount }: GiftCardFormProps) {
                 </button>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Max: ${Math.min(activeGiftCard.balance, totalAmount).toFixed(2)}
+                Max: ${Math.min(activeGiftCard.currentBalance, totalAmount).toFixed(2)}
               </p>
             </div>
           </div>

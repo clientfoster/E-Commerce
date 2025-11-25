@@ -94,14 +94,13 @@ export function CheckoutPage() {
       };
 
       await orderApi.createOrder(
-        orderData.userId,
         orderData.totalAmount,
         orderData.shippingAddress,
         orderData.billingAddress,
         orderData.items
       );
 
-      await clearCart(user.id);
+      await clearCart();
       setOrderPlaced(true);
 
       setTimeout(() => {

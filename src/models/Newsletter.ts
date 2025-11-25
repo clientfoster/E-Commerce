@@ -2,13 +2,15 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface INewsletter extends Document {
   email: string;
-  subscribedAt: Date;
-  isSubscribed: boolean;
-  preferences: {
+  name?: string;
+  isActive: boolean;
+  preferences?: {
     fashionNews: boolean;
     promotions: boolean;
     newProducts: boolean;
   };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const NewsletterSchema = new Schema<INewsletter>(
@@ -20,7 +22,11 @@ const NewsletterSchema = new Schema<INewsletter>(
       lowercase: true,
       trim: true,
     },
-    isSubscribed: {
+    name: {
+      type: String,
+      trim: true,
+    },
+    isActive: {
       type: Boolean,
       default: true,
     },
@@ -40,7 +46,7 @@ const NewsletterSchema = new Schema<INewsletter>(
     },
   },
   {
-    timestamps: { createdAt: 'subscribedAt', updatedAt: true },
+    timestamps: true,
   }
 );
 

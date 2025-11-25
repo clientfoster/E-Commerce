@@ -2,12 +2,15 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IGiftCard extends Document {
   code: string;
-  amount: number;
-  balance: number;
+  initialAmount: number;
+  currentBalance: number;
+  purchasedBy?: mongoose.Types.ObjectId;
   recipientEmail?: string;
+  recipientName?: string;
   senderName?: string;
   message?: string;
-  expiresAt: Date;
+  expiresAt?: Date;
+  isActive: boolean;
   isRedeemed: boolean;
   redeemedAt?: Date;
   createdAt: Date;
@@ -19,28 +22,39 @@ const GiftCardSchema: Schema = new Schema({
     type: String, 
     required: true, 
     unique: true,
+    uppercase: true,
     index: true
   },
-  amount: { 
+  initialAmount: { 
     type: Number, 
     required: true,
     min: 1
   },
-  balance: { 
+  currentBalance: { 
     type: Number, 
     required: true,
     min: 0
+  },
+  purchasedBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User'
   },
   recipientEmail: { 
     type: String,
     match: /^\S+@\S+\.\S+$/
   },
+  recipientName: {
+    type: String
+  },
   senderName: String,
   message: String,
   expiresAt: { 
-    type: Date, 
-    required: true,
+    type: Date,
     index: true
+  },
+  isActive: {
+    type: Boolean,
+    default: true
   },
   isRedeemed: { 
     type: Boolean, 
@@ -51,6 +65,6 @@ const GiftCardSchema: Schema = new Schema({
   timestamps: true
 });
 
-GiftCardSchema.index({ code: 1, isRedeemed: 1 });
+GiftCardSchema.index({ code: 1, isActive: 1 });
 
-export default mongoose.model<IGiftCard>('GiftCard', GiftCardSchema);
+export default mongoose.models.GiftCard || mongoose.model<IGiftCard>('GiftCard', GiftCardSchema);

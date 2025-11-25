@@ -9,6 +9,7 @@ import Category from '../../src/models/Category.ts';
 import Review from '../../src/models/Review.ts';
 
 const router = express.Router();
+import { verifyToken, verifyAdmin } from '../middleware/auth.js';
 
 // Admin setup - Create first super admin
 router.post('/setup', async (req, res) => {
@@ -54,7 +55,7 @@ router.post('/setup', async (req, res) => {
 });
 
 // Get stats
-router.get('/stats', async (req, res) => {
+router.get('/stats', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const [productsCount, ordersCount, usersCount, blogsCount] = await Promise.all([
       Product.countDocuments(),
@@ -75,10 +76,10 @@ router.get('/stats', async (req, res) => {
 });
 
 // Get all products
-router.get('/products', async (req, res) => {
+router.get('/products', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const products = await Product.find().populate('categoryId').sort({ createdAt: -1 });
-    
+
     res.json(products.map(p => ({
       id: p._id.toString(),
       name: p.name,
@@ -104,7 +105,7 @@ router.get('/products', async (req, res) => {
 });
 
 // Delete product
-router.delete('/products/:productId', async (req, res) => {
+router.delete('/products/:productId', verifyToken, verifyAdmin, async (req, res) => {
   try {
     await Product.findByIdAndDelete(req.params.productId);
     res.json({ success: true });
@@ -114,7 +115,7 @@ router.delete('/products/:productId', async (req, res) => {
 });
 
 // Update product
-router.put('/products/:productId', async (req, res) => {
+router.put('/products/:productId', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(
       req.params.productId,
@@ -128,7 +129,7 @@ router.put('/products/:productId', async (req, res) => {
 });
 
 // Create product
-router.post('/products', async (req, res) => {
+router.post('/products', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const product = await Product.create(req.body);
     res.json(product);
@@ -138,14 +139,14 @@ router.post('/products', async (req, res) => {
 });
 
 // Get all orders
-router.get('/orders', async (req, res) => {
+router.get('/orders', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const orders = await Order.find().populate('userId').sort({ createdAt: -1 });
-    
+
     const ordersWithItems = await Promise.all(
       orders.map(async (order) => {
         const items = await OrderItem.find({ orderId: order._id }).populate('productId');
-        
+
         return {
           id: order._id.toString(),
           user_id: order.userId._id.toString(),
@@ -174,7 +175,7 @@ router.get('/orders', async (req, res) => {
 });
 
 // Update order status
-router.put('/orders/:orderId', async (req, res) => {
+router.put('/orders/:orderId', verifyToken, verifyAdmin, async (req, res) => {
   try {
     await Order.findByIdAndUpdate(req.params.orderId, { status: req.body.status });
     res.json({ success: true });
@@ -184,10 +185,10 @@ router.put('/orders/:orderId', async (req, res) => {
 });
 
 // Get all users
-router.get('/users', async (req, res) => {
+router.get('/users', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
-    
+
     res.json(users.map(u => ({
       id: u._id.toString(),
       email: u.email,
@@ -202,7 +203,7 @@ router.get('/users', async (req, res) => {
 });
 
 // Toggle user admin
-router.put('/users/:userId/admin', async (req, res) => {
+router.put('/users/:userId/admin', verifyToken, verifyAdmin, async (req, res) => {
   try {
     await User.findByIdAndUpdate(req.params.userId, { isAdmin: req.body.isAdmin });
     res.json({ success: true });
@@ -212,7 +213,7 @@ router.put('/users/:userId/admin', async (req, res) => {
 });
 
 // Delete user
-router.delete('/users/:userId', async (req, res) => {
+router.delete('/users/:userId', verifyToken, verifyAdmin, async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.userId);
     res.json({ success: true });
@@ -224,7 +225,7 @@ router.delete('/users/:userId', async (req, res) => {
 // ========== BLOG MANAGEMENT ==========
 
 // Get all blogs (including unpublished)
-router.get('/blogs', async (req, res) => {
+router.get('/blogs', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const blogs = await Blog.find().sort({ createdAt: -1 });
     res.json(blogs.map(b => ({
@@ -246,7 +247,7 @@ router.get('/blogs', async (req, res) => {
 });
 
 // Create blog
-router.post('/blogs', async (req, res) => {
+router.post('/blogs', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const blog = await Blog.create(req.body);
     res.json({ success: true, id: blog._id.toString() });
@@ -256,7 +257,7 @@ router.post('/blogs', async (req, res) => {
 });
 
 // Update blog
-router.put('/blogs/:blogId', async (req, res) => {
+router.put('/blogs/:blogId', verifyToken, verifyAdmin, async (req, res) => {
   try {
     await Blog.findByIdAndUpdate(req.params.blogId, req.body);
     res.json({ success: true });
@@ -266,7 +267,7 @@ router.put('/blogs/:blogId', async (req, res) => {
 });
 
 // Delete blog
-router.delete('/blogs/:blogId', async (req, res) => {
+router.delete('/blogs/:blogId', verifyToken, verifyAdmin, async (req, res) => {
   try {
     await Blog.findByIdAndDelete(req.params.blogId);
     res.json({ success: true });
@@ -276,7 +277,7 @@ router.delete('/blogs/:blogId', async (req, res) => {
 });
 
 // Toggle blog publish status
-router.put('/blogs/:blogId/publish', async (req, res) => {
+router.put('/blogs/:blogId/publish', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.blogId);
     if (!blog) {
@@ -293,15 +294,15 @@ router.put('/blogs/:blogId/publish', async (req, res) => {
 // ========== SITE SETTINGS ==========
 
 // Get site settings
-router.get('/settings', async (req, res) => {
+router.get('/settings', verifyToken, verifyAdmin, async (req, res) => {
   try {
     let settings = await SiteSettings.findOne();
-    
+
     // Create default settings if none exist
     if (!settings) {
       settings = await SiteSettings.create({});
     }
-    
+
     res.json({
       id: settings._id.toString(),
       site_name: settings.siteName,
@@ -325,17 +326,17 @@ router.get('/settings', async (req, res) => {
 });
 
 // Update site settings
-router.put('/settings', async (req, res) => {
+router.put('/settings', verifyToken, verifyAdmin, async (req, res) => {
   try {
     let settings = await SiteSettings.findOne();
-    
+
     if (!settings) {
       settings = await SiteSettings.create(req.body);
     } else {
       Object.assign(settings, req.body);
       await settings.save();
     }
-    
+
     res.json({
       success: true,
       settings: {
@@ -353,7 +354,7 @@ router.put('/settings', async (req, res) => {
 // ========== CATEGORY MANAGEMENT ==========
 
 // Get all categories
-router.get('/categories', async (req, res) => {
+router.get('/categories', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const categories = await Category.find().sort({ createdAt: -1 });
     res.json(categories.map(c => ({
@@ -365,43 +366,15 @@ router.get('/categories', async (req, res) => {
       created_at: c.createdAt.toISOString(),
     })));
   } catch (error) {
+    console.error('Get all categories error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 // Create category
-router.post('/categories', async (req, res) => {
+router.post('/categories', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const category = await Category.create(req.body);
-    res.json({ 
-      success: true, 
-      category: {
-        id: category._id.toString(),
-        name: category.name,
-        slug: category.slug,
-        description: category.description || null,
-        image_url: category.imageUrl || null,
-        created_at: category.createdAt.toISOString(),
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Update category
-router.put('/categories/:categoryId', async (req, res) => {
-  try {
-    const category = await Category.findByIdAndUpdate(
-      req.params.categoryId,
-      req.body,
-      { new: true }
-    );
-    
-    if (!category) {
-      return res.status(404).json({ error: 'Category not found' });
-    }
-    
     res.json({
       success: true,
       category: {
@@ -414,16 +387,65 @@ router.put('/categories/:categoryId', async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Category creation error:', error);
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ error: 'Validation failed: ' + errors.join(', ') });
+    }
+    if (error.code === 11000) {
+      return res.status(400).json({ error: 'A category with this slug already exists' });
+    }
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update category
+router.put('/categories/:categoryId', verifyToken, verifyAdmin, async (req, res) => {
+  try {
+    const category = await Category.findByIdAndUpdate(
+      req.params.categoryId,
+      req.body,
+      { new: true }
+    );
+
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    res.json({
+      success: true,
+      category: {
+        id: category._id.toString(),
+        name: category.name,
+        slug: category.slug,
+        description: category.description || null,
+        image_url: category.imageUrl || null,
+        created_at: category.createdAt.toISOString(),
+      }
+    });
+  } catch (error) {
+    console.error('Category update error:', error);
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ error: 'Validation failed: ' + errors.join(', ') });
+    }
+    if (error.code === 11000) {
+      return res.status(400).json({ error: 'A category with this slug already exists' });
+    }
     res.status(500).json({ error: error.message });
   }
 });
 
 // Delete category
-router.delete('/categories/:categoryId', async (req, res) => {
+router.delete('/categories/:categoryId', verifyToken, verifyAdmin, async (req, res) => {
   try {
-    await Category.findByIdAndDelete(req.params.categoryId);
+    const category = await Category.findByIdAndDelete(req.params.categoryId);
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
     res.json({ success: true });
   } catch (error) {
+    console.error('Category deletion error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -431,10 +453,10 @@ router.delete('/categories/:categoryId', async (req, res) => {
 // ========== REVIEW MANAGEMENT ==========
 
 // Get all reviews
-router.get('/reviews', async (req, res) => {
+router.get('/reviews', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const reviews = await Review.find().populate('userId').populate('productId').sort({ createdAt: -1 });
-    
+
     res.json(reviews.map(r => ({
       id: r._id.toString(),
       product_id: r.productId._id.toString(),
@@ -452,7 +474,7 @@ router.get('/reviews', async (req, res) => {
 });
 
 // Delete review
-router.delete('/reviews/:reviewId', async (req, res) => {
+router.delete('/reviews/:reviewId', verifyToken, verifyAdmin, async (req, res) => {
   try {
     await Review.findByIdAndDelete(req.params.reviewId);
     res.json({ success: true });

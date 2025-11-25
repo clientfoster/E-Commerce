@@ -92,7 +92,7 @@ export function SizeGuidePage() {
                         className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
                       >
                         <td className="py-3 px-4 font-medium text-gray-900">{row.size}</td>
-                        {Object.entries(row).filter(([key]) => key !== 'size').map(([key, value], colIndex) => (
+                        {Object.entries(row).filter(([key]) => key !== 'size').map(([, value], colIndex) => (
                           <td key={colIndex} className="py-3 px-4 text-gray-700">
                             {value}
                           </td>

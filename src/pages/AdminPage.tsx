@@ -327,39 +327,27 @@ export function AdminPage() {
       await adminApi.deleteCategory(categoryId);
       loadCategories();
       loadStats();
+      alert('Category deleted successfully!');
     } catch (error) {
-      alert('Failed to delete category');
+      console.error('Delete category error:', error);
+      alert('Failed to delete category. Please check the console for more details.');
     }
   };
 
   const handleSaveCategory = async (categoryData: any) => {
     try {
-      console.log('Saving category data:', categoryData);
-      
       // Validate required fields
       if (!categoryData.name || !categoryData.name.trim()) {
         alert('Category name is required');
         return;
       }
       
-      // Convert field names from snake_case to camelCase for the backend
-      const transformedData = {
-        name: categoryData.name,
-        slug: categoryData.slug,
-        description: categoryData.description,
-        imageUrl: categoryData.image_url,
-      };
-      
-      console.log('Transformed data for API:', transformedData);
-      
       if (editingCategory) {
         // Update existing category
-        console.log('Updating existing category:', editingCategory.id);
-        await adminApi.updateCategory(editingCategory.id, transformedData);
+        await adminApi.updateCategory(editingCategory.id, categoryData);
       } else {
         // Create new category
-        console.log('Creating new category');
-        await adminApi.createCategory(transformedData);
+        await adminApi.createCategory(categoryData);
       }
       setShowCategoryModal(false);
       loadCategories();
@@ -367,27 +355,14 @@ export function AdminPage() {
       alert(`${editingCategory ? 'Updated' : 'Created'} category successfully!`);
     } catch (error: any) {
       console.error('Save category error:', error);
-      // Try to get more detailed error message
       let errorMessage = `Failed to ${editingCategory ? 'update' : 'create'} category`;
       
-      // Handle different types of errors
       if (error.message) {
         errorMessage += `: ${error.message}`;
-      } else if (error.error) {
-        errorMessage += `: ${error.error}`;
       } else if (typeof error === 'string') {
         errorMessage += `: ${error}`;
       } else {
-        errorMessage += `. Please check the console for more details.`;
-      }
-      
-      // Add additional context for common issues
-      if (errorMessage.includes('Network error')) {
-        errorMessage += ' Please check your internet connection and ensure the backend server is running.';
-      } else if (errorMessage.includes('404')) {
-        errorMessage += ' The API endpoint was not found. Please check if the backend server is running correctly.';
-      } else if (errorMessage.includes('500')) {
-        errorMessage += ' There was a server error. Please check the backend logs for more details.';
+        errorMessage += '. Please check the console for more details.';
       }
       
       alert(errorMessage);
@@ -428,6 +403,7 @@ export function AdminPage() {
       setStats(prev => ({ ...prev, categories: Array.isArray(data) ? data.length : 0 }));
     } catch (error) {
       console.error('Load categories error:', error);
+      alert('Failed to load categories. Please check the console for more details.');
       setCategories([]);
       setStats(prev => ({ ...prev, categories: 0 }));
     }

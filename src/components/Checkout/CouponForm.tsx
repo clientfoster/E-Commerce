@@ -32,7 +32,8 @@ export function CouponForm({ subtotal, onDiscountApplied }: CouponFormProps) {
       } else {
         setError(response.message || 'Invalid coupon code');
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Failed to apply coupon:', error);
       setError('Failed to apply coupon');
     } finally {
       setIsLoading(false);

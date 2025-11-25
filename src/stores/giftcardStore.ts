@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import { giftcardApi } from '../lib/api/giftcardApi';
+import { giftCardApi } from '../lib/api/newApis';
 import type { IGiftCard } from '../models/GiftCard';
 
 interface GiftCardState {
-  giftCards: IGiftCard[];
+  giftCards: any[];
   activeGiftCard: IGiftCard | null;
   loading: boolean;
   error: string | null;
@@ -12,12 +13,12 @@ interface GiftCardState {
   createGiftCard: (giftCardData: Partial<IGiftCard>) => Promise<boolean>;
   applyGiftCard: (code: string) => Promise<boolean>;
   getGiftCardByCode: (code: string) => Promise<IGiftCard | null>;
-  getUserGiftCards: (userId: string) => Promise<void>;
+  getUserGiftCards: () => Promise<void>;
   clearError: () => void;
   setActiveGiftCard: (giftCard: IGiftCard | null) => void;
 }
 
-export const useGiftCardStore = create<GiftCardState>((set, get) => ({
+export const useGiftCardStore = create<GiftCardState>((set) => ({
   giftCards: [],
   activeGiftCard: null,
   loading: false,
@@ -54,12 +55,12 @@ export const useGiftCardStore = create<GiftCardState>((set, get) => ({
           return false;
         }
         
-        if (new Date(giftCard.expiresAt) < now) {
+        if (giftCard.expiresAt && new Date(giftCard.expiresAt) < now) {
           set({ loading: false, error: 'This gift card has expired' });
           return false;
         }
         
-        if (giftCard.balance <= 0) {
+        if (giftCard.currentBalance <= 0) {
           set({ loading: false, error: 'This gift card has no remaining balance' });
           return false;
         }
@@ -92,20 +93,41 @@ export const useGiftCardStore = create<GiftCardState>((set, get) => ({
     }
   },
   
-  getUserGiftCards: async (userId) => {
+  getUserGiftCards: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await giftcardApi.getUserGiftCards(userId);
-      if (response.success && response.data) {
-        set({ 
-          loading: false, 
-          giftCards: response.data 
-        });
-      } else {
-        set({ loading: false, error: response.message || 'Failed to fetch gift cards' });
-      }
+      // Use the new API that doesn't require userId (uses token)
+      const giftCards = await giftCardApi.getUserGiftCards();
+      
+      // Transform to match IGiftCard interface
+      const transformedCards = giftCards.map((card: any) => ({
+        _id: card._id,
+        code: card.code,
+        initialAmount: card.initialAmount,
+        currentBalance: card.currentBalance,
+        purchasedBy: undefined, // Will be populated from token
+        recipientEmail: card.recipientEmail,
+        recipientName: card.recipientName,
+        message: card.message,
+        expiresAt: card.expiresAt ? new Date(card.expiresAt) : undefined,
+        isActive: card.isActive,
+        isRedeemed: card.isRedeemed || false,
+        redeemedAt: undefined,
+        createdAt: card.createdAt ? new Date(card.createdAt) : new Date(),
+        updatedAt: card.updatedAt ? new Date(card.updatedAt) : new Date(),
+      }));
+      
+      set({ 
+        loading: false, 
+        giftCards: transformedCards,
+        error: null
+      });
     } catch (error) {
-      set({ loading: false, error: 'An unexpected error occurred' });
+      console.error('Get user gift cards error:', error);
+      set({ 
+        loading: false, 
+        error: error instanceof Error ? error.message : 'Failed to fetch gift cards' 
+      });
     }
   },
   

@@ -1,8 +1,6 @@
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useRecentlyViewedStore } from '../../stores/recentlyViewedStore';
-import type { Product } from '../../types';
 
 interface RecentlyViewedProps {
   currentProductId?: string;

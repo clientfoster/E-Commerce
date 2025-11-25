@@ -1,14 +1,26 @@
 import express from 'express';
 import CartItem from '../../src/models/CartItem.ts';
 
+import { verifyToken } from '../middleware/auth.js';
+
 const router = express.Router();
 
+// Apply middleware to all routes
+router.use(verifyToken);
+
 // Get cart
-router.get('/:userId', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const items = await CartItem.find({ userId: req.params.userId }).populate('productId');
-    
-    res.json(items.map(item => ({
+    if (!req.userId) {
+      return res.status(401).json({ error: 'User ID is required' });
+    }
+
+    const items = await CartItem.find({ userId: req.userId }).populate('productId');
+
+    // Filter out items where product was deleted
+    const validItems = items.filter(item => item.productId);
+
+    res.json(validItems.map(item => ({
       id: item._id.toString(),
       product_id: item.productId._id.toString(),
       quantity: item.quantity,
@@ -23,17 +35,40 @@ router.get('/:userId', async (req, res) => {
       },
     })));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Get cart error:', error);
+    res.status(500).json({ error: 'Failed to fetch cart items' });
   }
 });
 
 // Add to cart
 router.post('/', async (req, res) => {
   try {
-    const { userId, productId, quantity, size, color, material } = req.body;
-    
+    const { productId, quantity, size, color, material } = req.body;
+
+    // Validate required fields
+    if (!productId) {
+      return res.status(400).json({ error: 'Product ID is required' });
+    }
+    if (!quantity || quantity <= 0) {
+      return res.status(400).json({ error: 'Quantity must be greater than 0' });
+    }
+
+    // Verify product exists
+    const Product = (await import('../../src/models/Product.ts')).default;
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Check stock availability
+    if (product.stockQuantity < quantity) {
+      return res.status(400).json({ 
+        error: `Only ${product.stockQuantity} items available in stock` 
+      });
+    }
+
     const item = await CartItem.create({
-      userId,
+      userId: req.userId,
       productId,
       quantity,
       size,
@@ -43,6 +78,10 @@ router.post('/', async (req, res) => {
 
     const populatedItem = await CartItem.findById(item._id).populate('productId');
     
+    if (!populatedItem.productId) {
+      return res.status(404).json({ error: 'Product not found after adding to cart' });
+    }
+
     res.json({
       id: populatedItem._id.toString(),
       product_id: populatedItem.productId._id.toString(),
@@ -58,23 +97,58 @@ router.post('/', async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Add to cart error:', error);
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ error: 'Validation failed: ' + errors.join(', ') });
+    }
+    res.status(500).json({ error: 'Failed to add item to cart' });
   }
 });
 
 // Update quantity
 router.put('/:itemId', async (req, res) => {
   try {
-    await CartItem.findByIdAndUpdate(req.params.itemId, { quantity: req.body.quantity });
+    const { quantity } = req.body;
+    
+    // Validate quantity
+    if (!quantity || quantity <= 0) {
+      return res.status(400).json({ error: 'Quantity must be greater than 0' });
+    }
+
+    const item = await CartItem.findOne({ _id: req.params.itemId, userId: req.userId });
+    if (!item) {
+      return res.status(404).json({ error: 'Cart item not found' });
+    }
+
+    // Check stock availability if product still exists
+    const Product = (await import('../../src/models/Product.ts')).default;
+    const product = await Product.findById(item.productId);
+    if (product && product.stockQuantity < quantity) {
+      return res.status(400).json({ 
+        error: `Only ${product.stockQuantity} items available in stock` 
+      });
+    }
+
+    await CartItem.findByIdAndUpdate(req.params.itemId, { quantity });
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Update cart quantity error:', error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({ error: 'Invalid item ID format' });
+    }
+    res.status(500).json({ error: 'Failed to update cart item quantity' });
   }
 });
 
 // Remove item
 router.delete('/:itemId', async (req, res) => {
   try {
+    const item = await CartItem.findOne({ _id: req.params.itemId, userId: req.userId });
+    if (!item) {
+      return res.status(404).json({ error: 'Cart item not found' });
+    }
+
     await CartItem.findByIdAndDelete(req.params.itemId);
     res.json({ success: true });
   } catch (error) {
@@ -83,9 +157,9 @@ router.delete('/:itemId', async (req, res) => {
 });
 
 // Clear cart
-router.delete('/user/:userId', async (req, res) => {
+router.delete('/', async (req, res) => {
   try {
-    await CartItem.deleteMany({ userId: req.params.userId });
+    await CartItem.deleteMany({ userId: req.userId });
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });

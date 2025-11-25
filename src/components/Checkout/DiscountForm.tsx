@@ -42,7 +42,8 @@ export function DiscountForm() {
       } else {
         setError('Invalid discount code');
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Failed to apply discount:', error);
       setError('Failed to apply discount. Please try again.');
     } finally {
       setIsLoading(false);

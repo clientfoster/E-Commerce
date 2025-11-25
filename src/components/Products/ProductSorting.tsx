@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 
 interface ProductSortingProps {
   onSortChange: (sortBy: string, sortOrder: 'asc' | 'desc') => void;
@@ -8,13 +7,6 @@ interface ProductSortingProps {
 export function ProductSorting({ onSortChange }: ProductSortingProps) {
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-
-  const handleSortChange = (newSortBy: string) => {
-    const newSortOrder = sortBy === newSortBy && sortOrder === 'asc' ? 'desc' : 'asc';
-    setSortBy(newSortBy);
-    setSortOrder(newSortOrder);
-    onSortChange(newSortBy, newSortOrder);
-  };
 
   const sortOptions = [
     { value: 'name', label: 'Name' },

@@ -20,7 +20,13 @@ export function HomePage() {
         isActive: true,
         limit: 6,
       });
-      if (data) setFeaturedProducts(data as Product[]);
+      // API returns { products: [...], total, page, pages }
+      if (data && data.products) {
+        setFeaturedProducts(data.products as Product[]);
+      } else if (Array.isArray(data)) {
+        // Fallback if API returns array directly
+        setFeaturedProducts(data as Product[]);
+      }
     } catch (error) {
       console.error('Fetch featured products error:', error);
     }
