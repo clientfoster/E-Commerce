@@ -88,28 +88,7 @@ export function Header() {
                 Contact
               </button>
               
-              <button 
-                onClick={() => navigate('/compare')}
-                className={`text-sm font-medium transition-colors ${
-                  currentPage === 'compare'
-                    ? 'text-gray-900'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Compare
-              </button>
-              
-              {/* Legal Section */}
-              <button 
-                onClick={() => navigate('/terms')}
-                className={`text-sm font-medium transition-colors ${
-                  currentPage === 'terms'
-                    ? 'text-gray-900'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Legal
-              </button>
+
             </div>
           </nav>
 

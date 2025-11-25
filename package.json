@@ -4,9 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"tsx server/index.js\" \"vite\"",
     "server": "tsx server/index.js",
-    "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -33,6 +32,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.9.6",
+    "stripe": "^20.0.0",
     "three": "^0.158.0",
     "twilio": "^5.10.6",
     "zustand": "^5.0.8"
