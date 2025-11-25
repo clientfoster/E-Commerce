@@ -1,6 +1,6 @@
 import type { Coupon } from '../../stores/couponStore';
 
-const API_URL = '/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface CouponResponse {
   success: boolean;
