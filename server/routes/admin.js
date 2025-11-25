@@ -1,12 +1,12 @@
 import express from 'express';
-import Product from '../../src/models/Product.ts';
-import Order from '../../src/models/Order.ts';
-import OrderItem from '../../src/models/OrderItem.ts';
-import User from '../../src/models/User.ts';
-import Blog from '../../src/models/Blog.ts';
-import SiteSettings from '../../src/models/SiteSettings.ts';
-import Category from '../../src/models/Category.ts';
-import Review from '../../src/models/Review.ts';
+import Product from '../../src/models/Product.js';
+import Order from '../../src/models/Order.js';
+import OrderItem from '../../src/models/OrderItem.js';
+import User from '../../src/models/User.js';
+import Blog from '../../src/models/Blog.js';
+import SiteSettings from '../../src/models/SiteSettings.js';
+import Category from '../../src/models/Category.js';
+import Review from '../../src/models/Review.js';
 
 const router = express.Router();
 import { verifyToken, verifyAdmin } from '../middleware/auth.js';

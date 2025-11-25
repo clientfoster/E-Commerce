@@ -1,5 +1,5 @@
 import express from 'express';
-import Wishlist from '../../src/models/Wishlist.ts';
+import Wishlist from '../../src/models/Wishlist.js';
 import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();

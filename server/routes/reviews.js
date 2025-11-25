@@ -1,6 +1,6 @@
 import express from 'express';
-import Review from '../../src/models/Review.ts';
-import Product from '../../src/models/Product.ts';
+import Review from '../../src/models/Review.js';
+import Product from '../../src/models/Product.js';
 import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();

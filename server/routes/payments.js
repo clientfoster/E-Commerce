@@ -1,6 +1,6 @@
 import express from 'express';
 import Stripe from 'stripe';
-import Order from '../../src/models/Order.ts';
+import Order from '../../src/models/Order.js';
 import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();

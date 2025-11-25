@@ -1,5 +1,5 @@
 import express from 'express';
-import CartItem from '../../src/models/CartItem.ts';
+import CartItem from '../../src/models/CartItem.js';
 
 import { verifyToken } from '../middleware/auth.js';
 

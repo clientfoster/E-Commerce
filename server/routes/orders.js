@@ -1,6 +1,6 @@
 import express from 'express';
-import Order from '../../src/models/Order.ts';
-import OrderItem from '../../src/models/OrderItem.ts';
+import Order from '../../src/models/Order.js';
+import OrderItem from '../../src/models/OrderItem.js';
 
 import { verifyToken } from '../middleware/auth.js';
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import GiftCard from '../../src/models/GiftCard.ts';
+import GiftCard from '../../src/models/GiftCard.js';
 import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
